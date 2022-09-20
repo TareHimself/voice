@@ -1,8 +1,6 @@
 # V3
 import os
 import torch
-import torchaudio
-import wave
 import sounddevice as sd
 from events.thread_emitter import ThreadEmitter
 
@@ -24,24 +22,26 @@ class TTSThread(ThreadEmitter):
         self.model = None
 
     def DoTTS(self, text):
-        audio = self.model.apply_tts(text=text,
-                                     speaker=SPEAKER,
-                                     sample_rate=SAMPLE_RATE)
+        if self.model:
+            audio = self.model.apply_tts(text=text,
+                                         speaker=SPEAKER,
+                                         sample_rate=SAMPLE_RATE)
 
-        sd.play(audio,SAMPLE_RATE);
+            sd.play(audio,SAMPLE_RATE);
 
     def HandleJob(self, job: str, *args, **kwargs):
         if job == "say":
             self.DoTTS(*args, *kwargs)
 
     def run(self):
-        if not os.path.isfile(local_file):
+        '''if not os.path.isfile(local_file):
             torch.hub.download_url_to_file('https://models.silero.ai/models/tts/en/v3_en.pt',
                                            local_file)
         self.model = torch.package.PackageImporter(local_file).load_pickle("tts_models", "model")
         self.model.to(device)
         while True:
-            self.ProcessJobs()
+            self.ProcessJobs()'''
+        pass
 
 
 def StartTTS():

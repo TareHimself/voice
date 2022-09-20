@@ -1,3 +1,5 @@
+import platform
+
 import numpy as np
 import wx
 from constants import wx_visualizer_band_color
@@ -41,8 +43,10 @@ class Visualizer(wx.Panel):
             self.fft_data[x] = scale(d[x])
 
     def DrawBar(self, gc, x, y, w, h, radius):
-        gc.DrawRoundedRectangle(x - (w / 2), y - (h / 2), w,
-                                h, radius)
+        if platform.system().lower() == 'darwin':
+            gc.DrawRoundedRectangle((int(x - (w / 2)),int(y - (h / 2))),(int(w),int(h)), radius)
+        else:
+            gc.DrawRoundedRectangle(x - (w / 2), y - (h / 2), w,h, radius)
 
     def UpdatePhrase(self,phrase,IsComplete):
         self.status_text = phrase
@@ -65,4 +69,7 @@ class Visualizer(wx.Panel):
         gc.SetFont(wx.Font(20, wx.DECORATIVE, wx.ITALIC, wx.NORMAL))
         gc.SetTextForeground(wx_visualizer_band_color)
         w , h = gc.GetTextExtent(text_to_draw)
-        gc.DrawText(text_to_draw,(size[0] * 0.5) - (w / 2),(size[1] * 0.8) + h)
+        if platform.system().lower() == 'darwin':
+            gc.DrawText(text_to_draw, (int((size[0] * 0.5) - (0.5 * w)),int((size[1] * 0.8) + h)))
+        else:
+            gc.DrawText(text_to_draw,(size[0] * 0.5) - (w / 2),(size[1] * 0.8) + h)

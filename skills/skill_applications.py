@@ -1,10 +1,8 @@
 import psutil
 
 from skills import RegisterSkill
-import winapps
 import pyautogui
 import pyperclip as pc
-from windows_tools.installed_software import get_installed_software
 from os import system
 
 
