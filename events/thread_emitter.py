@@ -13,7 +13,7 @@ thread_queue = {}
 # Use 'use' instead of 'run'
 class ThreadEmitter(Thread):
 
-    def __init__(self):
+    def __init__(self, use_blocking_queue=True):
         super(ThreadEmitter, self).__init__(group=None, daemon=True)
         self.id = uuid.uuid1()
         thread_queue[self.id] = queue.Queue()
@@ -26,11 +26,9 @@ class ThreadEmitter(Thread):
         if job:
             self.HandleJob(job['j'], *job['a'], **job['k'])
 
-    def HandleJob(self, job:str, *args, **kwargs):
+    def HandleJob(self, job: str, *args, **kwargs):
         pass
 
     def run(self):
         while True:
             self.ProcessJobs()
-
-

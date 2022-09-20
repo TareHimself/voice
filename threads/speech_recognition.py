@@ -99,8 +99,7 @@ class SpeechRecognitionThread(ThreadEmitter):
                               samplerate_out=self.samplerate_in, is_fft=False)
         if callable(self.onStart):
             self.onStart()
-        while True:
-            self.ProcessJobs()
+
 
 
 def StartSpeechRecognition(onVoiceData: Callable[[str, bool], None], onStart: Callable[[], None], samplerate_in=44100):
