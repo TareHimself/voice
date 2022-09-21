@@ -34,14 +34,13 @@ class TTSThread(ThreadEmitter):
             self.DoTTS(*args, *kwargs)
 
     def run(self):
-        '''if not os.path.isfile(local_file):
+        if not os.path.isfile(local_file):
             torch.hub.download_url_to_file('https://models.silero.ai/models/tts/en/v3_en.pt',
                                            local_file)
         self.model = torch.package.PackageImporter(local_file).load_pickle("tts_models", "model")
         self.model.to(device)
         while True:
-            self.ProcessJobs()'''
-        pass
+            self.ProcessJobs()
 
 
 def StartTTS():

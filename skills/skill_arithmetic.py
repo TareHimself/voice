@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from events import global_emitter
-from skills import RegisterSkill
+from skills import RegisterSkill, skill
 from word2number import w2n
 
 tokens = {
@@ -39,16 +39,10 @@ def ParseStringToMath(expr):
         return ''
 
 
+@skill(r"^(search for|look up|google)[\s]+(.+)")
 def DoMath(phrase, match):
     result = ParseStringToMath(match[0][1])
     if len(result):
         global_emitter.emit('say', "The answer is {}".format(str(eval(result))), True)
     else:
         global_emitter.emit('say', 'Failed To Parse Mathematical Expression', True)
-
-
-def RestoreWindow(phrase, match):
-    global_emitter.emit('window_action', "restore")
-
-
-RegisterSkill(DoMath, r"^(math|calculate|arithmetic)[\s]+(.+)")

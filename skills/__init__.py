@@ -1,26 +1,20 @@
+import inspect
 import re
 
 all_skills = {}
 
 
-def skill(s):
-    func = s()
+def skill(regex):
+    def inner(func):
+        all_skills[regex] = func
+        return func
 
-    def inner(*args, **kwargs):
-        return func(*args, **kwargs)
-
-    all_skills[getattr(func, 'reg')] = inner
     return inner
 
 
 def RegisterSkill(s, regex):
     setattr(s, 'reg', regex)
-
-    @skill
-    def x(*args, **kwargs):
-        return s
-
-    return x
+    return
 
 
 def TryRunCommand(phrase):

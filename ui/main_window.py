@@ -13,6 +13,7 @@ class MainWindow(wx.Frame):
         super(MainWindow, self).__init__(None, title=main_window_name, size=(1920 / 2, 1080 / 2))
         self.SetBackgroundColour(wx_color_darkgrey)
         self.model_is_ready = False
+        self.is_processing_command = False
         self.speaker = StartTTS()
         self.speech_recognition = StartSpeechRecognition(onVoiceData=self.OnVoiceProcessed, onStart=self.OnVoiceStart)
         self.waiting_for_command = False
@@ -37,7 +38,7 @@ class MainWindow(wx.Frame):
             return
         if isComplete and phrase.lower().strip().startswith(wake_word) and not self.waiting_for_command:
             if len(phrase.lower()[len(wake_word):].strip()) > 0:
-                TryRunCommand(phrase.lower()[len(wake_word):].strip())
+                self.is_processing_command = TryRunCommand(phrase.lower()[len(wake_word):].strip())
             else:
                 self.waiting_for_command = True
                 global_emitter.emit('do_speech', "Yes?")
