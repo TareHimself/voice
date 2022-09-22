@@ -46,33 +46,44 @@ if not spotify_auth:
             UpdateHeader(spotify_auth)
 
 
-@skill(r"^pause spotify$")
+@skill(r"^pause music$")
 def Pause(phrase, match):
     requests.put(url="https://api.spotify.com/v1/me/player/pause", headers=header_data).content
 
 
-@skill(r"^resume spotify$")
+@skill(r"^resume music$")
 def Resume(phrase, match):
     requests.put(url="https://api.spotify.com/v1/me/player/play", headers=header_data)
 
 
-@skill(r"^skip spotify$")
+@skill(r"^skip music$")
 def Skip(phrase, match):
     requests.post(url="https://api.spotify.com/v1/me/player/next", headers=header_data)
 
 
-@skill(r"^(play)[\s]+(.+)")
+@skill(r"^(play)[\s]+(track|playlist|album)[\s]+(.+)")
 def Play(phrase, match):
+    print(match)
     result = requests.get(url="https://api.spotify.com/v1/search", headers=header_data, params={
-        "q": match[0][1],
-        "type": ['track']
+        "q": match[0][2],
+        "type": [match[0][1]]
     }).json()
 
-    if result['tracks'] and len(result['tracks']['items']) > 0:
-        requests.put(url="https://api.spotify.com/v1/me/player/play", headers=header_data, json={
-            'uris': [result['tracks']['items'][0]['uri']]
-        }).content
-        global_emitter.emit('say',"Playing {}".format(result['tracks']['items'][0]['name']),True)
+    query = '{}s'.format(match[0][1])
+    print(result[query]['items'][0]['uri'])
+    if result[query] and len(result[query]['items']) > 0:
+        if match[0][1] == 'track':
+            requests.put(url="https://api.spotify.com/v1/me/player/play", headers=header_data, json={
+                'uris': [result[query]['items'][0]['uri']]
+            })
+        else:
+
+            requests.put(url="https://api.spotify.com/v1/me/player/play", headers=header_data, json={
+                'context_uri': result[query]['items'][0]['uri'],
+                'offset' : { 'position' : 0}
+            })
+
+        global_emitter.emit('say',"Playing {}".format(result[query]['items'][0]['name']),True)
 
 @skill(r"^(add)[\s]+(.+)")
 def Play(phrase, match):
@@ -82,5 +93,6 @@ def Play(phrase, match):
     }).json()
 
     if result['tracks'] and len(result['tracks']['items']) > 0:
-        requests.post(url="https://api.spotify.com/v1/me/player/queue?q={}".format(result['tracks']['items'][0]['uri']), headers=header_data).content
+
+        print(requests.post(url="https://api.spotify.com/v1/me/player/queue?uri={}".format(result['tracks']['items'][0]['uri']), headers=header_data).content)
         global_emitter.emit('say',"Queued {}".format(result['tracks']['items'][0]['name']),True)

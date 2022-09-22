@@ -6,6 +6,8 @@ from typing import Callable
 import requests
 from vosk import Model, KaldiRecognizer, SetLogLevel
 from os import getcwd, path, mkdir, listdir
+
+from constants import vosk_model_url
 from events.thread_emitter import ThreadEmitter
 from threads.voice import StartVoice
 from io import BytesIO
@@ -61,7 +63,6 @@ class SpeechRecognitionThread(ThreadEmitter):
     def run(self):
         global model_downloaded
         global model_downloading
-        # https://alphacephei.com/vosk/models/vosk-model-en-us-daanzu-20200905.zip
         if not model_downloaded:
             if not path.exists(path.join(getcwd(), "model")):
                 if model_downloading:
@@ -76,7 +77,7 @@ class SpeechRecognitionThread(ThreadEmitter):
                         if callable(self.callback):
                             self.callback("Downloading Model {:.1f}/{:.1f} mb".format(float(c) * (1/1e+6), float(t) * (1/1e+6)),True)
 
-                    download_url = "https://alphacephei.com/vosk/models/vosk-model-en-us-daanzu-20200905.zip"
+                    download_url = vosk_model_url
                     dir_name = download_url.split('/')
                     dir_name.reverse()
                     dir_name = dir_name[0][:-4]
@@ -93,14 +94,11 @@ class SpeechRecognitionThread(ThreadEmitter):
 
         print(getcwd())
         self.model = Model(model_path=path.join(getcwd(),'model'))
-        # r"C:\Users\Taree\Pictures\vosk-model-en-us-0.21\vosk-model-en-us-0.21")
         self.rec = KaldiRecognizer(self.model, self.samplerate_in)
         self.mic = StartVoice(callback=self.OnVoiceChunk, chunk=8000, samplerate_in=self.samplerate_in,
                               samplerate_out=self.samplerate_in, is_fft=False)
         if callable(self.onStart):
             self.onStart()
-
-
 
 def StartSpeechRecognition(onVoiceData: Callable[[str, bool], None], onStart: Callable[[], None], samplerate_in=44100):
     SpeechRecognition = SpeechRecognitionThread(callback=onVoiceData, onStart=onStart, samplerate_in=samplerate_in)

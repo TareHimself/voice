@@ -9,6 +9,7 @@ from events import EventEmitter
 
 thread_queue = {}
 
+lock = threading.Lock()
 
 # Use 'use' instead of 'run'
 class ThreadEmitter(Thread):
@@ -29,6 +30,11 @@ class ThreadEmitter(Thread):
     def HandleJob(self, job: str, *args, **kwargs):
         pass
 
+    def AquireLock(self):
+        lock.acquire()
+
+    def ReleaseLock(self):
+        lock.release()
     def run(self):
         while True:
             self.ProcessJobs()

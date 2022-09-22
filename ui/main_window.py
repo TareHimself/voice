@@ -15,6 +15,7 @@ class MainWindow(wx.Frame):
         self.model_is_ready = False
         self.is_processing_command = False
         self.speaker = StartTTS()
+        global_emitter.on('user_input',self.DoUserInput)
         self.speech_recognition = StartSpeechRecognition(onVoiceData=self.OnVoiceProcessed, onStart=self.OnVoiceStart)
         self.waiting_for_command = False
         self.vis = Visualizer(self, bar_width=7, channels=16)
@@ -29,6 +30,8 @@ class MainWindow(wx.Frame):
         elif action == "restore":
             self.Restore()
 
+    def DoUserInput(self,urs_input):
+        self.OnVoiceProcessed(urs_input,True)
     def DoSpeech(self,message):
         self.speaker.AddJob('say', message)
 
@@ -45,13 +48,16 @@ class MainWindow(wx.Frame):
                 global_emitter.emit('say', "Listening...", True)
         elif isComplete and self.waiting_for_command:
             if isComplete:
-                TryRunCommand(phrase)
+                try:
+                    TryRunCommand(phrase)
+                except Exception as e:
+                    print(e)
                 self.waiting_for_command = False
         elif self.waiting_for_command:
             global_emitter.emit('say', phrase, False)
 
     def OnVoiceStart(self):
-        global_emitter.emit('do_speech', "Speech Recognition Active")
+        global_emitter.emit('do_speech', "Speech Recognition Active.")
         global_emitter.emit('say', '...', True)
         self.model_is_ready = True
 
