@@ -6,7 +6,7 @@ from constants import wx_visualizer_band_color
 from events import global_emitter
 from threads.voice import StartVoice
 
-SMOOTHING_RATE = 10
+SMOOTHING_RATE = 15
 
 
 class Visualizer(wx.Panel):
@@ -35,7 +35,7 @@ class Visualizer(wx.Panel):
 
     def OnVoiceData(self, d):
         def scale(item):
-            return min(max(np.interp(item, (0, 8000), (0, self.GetSize()[1] * 0.6)), self.bar_width),
+            return min(max(np.interp(item, (0, 4000), (0, self.GetSize()[1] * 0.6)), self.bar_width),
                        self.GetSize()[1] * 0.6)
         if len(d) != self.channels:
             raise Exception("Data sent to 'Visualize' has incorrect channels, expected", self.channels ," got ", len(d))

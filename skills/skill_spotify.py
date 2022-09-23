@@ -14,7 +14,7 @@ SPOTIFY_AUTH_PATH = path.join(getcwd(), 'spotify_auth.json')
 
 spotify_auth = None
 header_data = None
-
+spotify_auth_expire = None
 
 def UpdateHeader(auth):
     global header_data
@@ -25,12 +25,21 @@ def UpdateHeader(auth):
 
 
 def OnSpotifyAuthReceived(auth):
-    global spotify_auth
+    nonlocal spotify_auth
     spotify_auth = auth
     UpdateHeader(auth)
     with open(SPOTIFY_AUTH_PATH, "w") as outfile:
         json.dump(spotify_auth, outfile, indent=4)
 
+def CheckTokenValid():
+    nonlocal spotify_auth
+    nonlocal spotify_auth_expire
+
+    if not spotify_auth_expire:
+        if spotify_auth['expires_at']:
+            pass
+    else:
+        pass
 
 if not spotify_auth:
     if not path.exists(SPOTIFY_AUTH_PATH):
@@ -70,8 +79,7 @@ def Play(phrase, match):
     }).json()
 
     query = '{}s'.format(match[0][1])
-    print(result[query]['items'][0]['uri'])
-    if result[query] and len(result[query]['items']) > 0:
+    if result.get(query) and len(result.get(query).get('items')) > 0:
         if match[0][1] == 'track':
             requests.put(url="https://api.spotify.com/v1/me/player/play", headers=header_data, json={
                 'uris': [result[query]['items'][0]['uri']]
@@ -84,6 +92,8 @@ def Play(phrase, match):
             })
 
         global_emitter.emit('say',"Playing {}".format(result[query]['items'][0]['name']),True)
+    else:
+        print(result)
 
 @skill(r"^(add)[\s]+(.+)")
 def Play(phrase, match):
