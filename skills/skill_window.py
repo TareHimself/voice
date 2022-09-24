@@ -1,19 +1,22 @@
 from datetime import datetime, timezone
 from events import global_emitter
-from skills import RegisterSkill, skill
+from skills import Skill
+from utils import EndCommand
 
 
-@skill(r"^(maximize|maximize (window|your window))$")
-
-def MaximizeWindow(phrase, match):
+@Skill(r"^(maximize|maximize (?:window|your window))$")
+def MaximizeWindow(phrase, keywords):
     global_emitter.emit('window_action', "maximize")
+    EndCommand()
 
-@skill(r"^(minimize|minimize (window|your window))$")
-def MinimizeWindow(phrase, match):
+
+@Skill(r"^(minimize|minimize (?:window|your window))$")
+def MinimizeWindow(phrase, keywords):
     global_emitter.emit('window_action', "minimize")
+    EndCommand()
 
 
-@skill(r"^(restore|restore (window|your window))$")
-def RestoreWindow(phrase, match):
+@Skill(r"^(restore|restore (?:window|your window))$")
+def RestoreWindow(phrase, keywords):
     global_emitter.emit('window_action', "restore")
-
+    EndCommand()

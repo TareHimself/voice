@@ -1,37 +1,23 @@
 import json
 import os
-from threading import Thread
+import time
 from typing import Callable
-
-import requests
 from vosk import Model, KaldiRecognizer, SetLogLevel
 from os import getcwd, path, mkdir, listdir
-
 from constants import vosk_model_url
+from events import global_emitter
 from events.thread_emitter import ThreadEmitter
 from threads.voice import StartVoice
-from io import BytesIO
 from zipfile import ZipFile
-import time
-from urllib.request import urlopen
+from threads.collect_input import InputThread
+from utils import DownloadFile
 
 SetLogLevel(-1)
 
 model_downloaded = False
 model_downloading = False
 
-
-def DownloadFile(url: str, OnProgress: Callable[[int, int], None] = lambda t, p: None):
-    f = BytesIO()
-    r = requests.get(url, stream=True)
-    total = r.headers["Content-Length"]
-
-    for chunk in r.iter_content(1024):
-        f.write(chunk)
-        OnProgress(total, f.getbuffer().nbytes)
-
-    return f
-
+SHOULD_USE_INPUT = True
 
 class SpeechRecognitionThread(ThreadEmitter):
 
@@ -60,43 +46,53 @@ class SpeechRecognitionThread(ThreadEmitter):
         if job == 'toggle':
             self.bShouldProcessData = args[0]
 
+    def OnInputFromUser(self,msg):
+        if callable(self.callback):
+            self.callback(msg, True)
+
     def run(self):
-        global model_downloaded
-        global model_downloading
-        if not model_downloaded:
-            if not path.exists(path.join(getcwd(), "model")):
-                if model_downloading:
-                    print('Waiting for another thread to download model', self.ident)
-                    while model_downloading:
-                        time.sleep(3)
+        if SHOULD_USE_INPUT:
+            i = InputThread()
+            i.start()
+            global_emitter.on('user_input',self.OnInputFromUser)
+        else:
+            global model_downloaded
+            global model_downloading
+            if not model_downloaded:
+                if not path.exists(path.join(getcwd(), "model")):
+                    if model_downloading:
+                        print('Waiting for another thread to download model', self.ident)
+                        while model_downloading:
+                            time.sleep(3)
+                    else:
+                        model_downloading = True
+                        print('downloading model', self.ident)
+
+                        def OnProgress(t, c):
+                            if callable(self.callback):
+                                self.callback("Downloading Model {:.1f}/{:.1f} mb".format(float(c) * (1/1e+6), float(t) * (1/1e+6)),True)
+
+                        download_url = vosk_model_url
+                        dir_name = download_url.split('/')
+                        dir_name.reverse()
+                        dir_name = dir_name[0][:-4]
+                        result = DownloadFile(download_url,OnProgress)
+                        z = ZipFile(result)
+                        z.extractall(getcwd())
+                        z.close()
+                        result.close()
+                        os.rename(path.join(getcwd(),dir_name),path.join(getcwd(),'model'))
+                        model_downloaded = True
+                        model_downloading = False
                 else:
-                    model_downloading = True
-                    print('downloading model', self.ident)
-
-                    def OnProgress(t, c):
-                        if callable(self.callback):
-                            self.callback("Downloading Model {:.1f}/{:.1f} mb".format(float(c) * (1/1e+6), float(t) * (1/1e+6)),True)
-
-                    download_url = vosk_model_url
-                    dir_name = download_url.split('/')
-                    dir_name.reverse()
-                    dir_name = dir_name[0][:-4]
-                    result = DownloadFile(download_url,OnProgress)
-                    z = ZipFile(result)
-                    z.extractall(getcwd())
-                    z.close()
-                    result.close()
-                    os.rename(path.join(getcwd(),dir_name),path.join(getcwd(),'model'))
                     model_downloaded = True
-                    model_downloading = False
-            else:
-                model_downloaded = True
 
-        print(getcwd())
-        self.model = Model(model_path=path.join(getcwd(),'model'))
-        self.rec = KaldiRecognizer(self.model, self.samplerate_in)
-        self.mic = StartVoice(callback=self.OnVoiceChunk, chunk=8000, samplerate_in=self.samplerate_in,
-                              samplerate_out=self.samplerate_in, is_fft=False)
+            self.model = Model(model_path=path.join(getcwd(),'model'))
+            self.rec = KaldiRecognizer(self.model, self.samplerate_in)
+            self.mic = StartVoice(callback=self.OnVoiceChunk, chunk=8000, samplerate_in=self.samplerate_in,
+                                  samplerate_out=self.samplerate_in, is_fft=False)
+
+
         if callable(self.onStart):
             self.onStart()
 

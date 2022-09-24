@@ -30,7 +30,7 @@ class TTSThread(ThreadEmitter):
             sd.play(audio,SAMPLE_RATE);
 
     def HandleJob(self, job: str, *args, **kwargs):
-        if job == "say":
+        if job == 'speaker_tts':
             self.DoTTS(*args, *kwargs)
 
     def run(self):

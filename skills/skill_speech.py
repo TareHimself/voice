@@ -1,7 +1,9 @@
 from events import global_emitter
-from skills import RegisterSkill, skill
+from skills import Skill
+from utils import TextToSpeech, EndCommand
 
 
-@skill(r"^(repeat|say|speak|voice)[\s]+(.+)")
-def DisplayTime(phrase, match):
-    global_emitter.emit('do_speech', match[0][1] + '.')
+@Skill(r"^(?:repeat|say|speak|voice)[\s]+(.+)")
+def DisplayTime(phrase, keywords):
+    TextToSpeech(keywords[0] + '.')
+    EndCommand()

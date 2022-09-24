@@ -26,7 +26,7 @@ class ServerThread(ThreadEmitter):
     def run(self):
         app = Flask(__name__)
 
-        @app.route("/sp_auth", methods=['GET'])
+        @app.route("/spotify", methods=['GET'])
         def OnSpotifyAuth():
             args = request.args
             code = args.get('code')

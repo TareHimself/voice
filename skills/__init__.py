@@ -1,10 +1,9 @@
-import inspect
 import re
 
 all_skills = {}
 
 
-def skill(regex):
+def Skill(regex):
     def inner(func):
         all_skills[regex] = func
         return func
@@ -17,12 +16,10 @@ def RegisterSkill(s, regex):
     return
 
 
-def TryRunCommand(phrase):
-    print(phrase)
+def GetCommand(phrase):
     for key in all_skills:
-        match = re.findall(key, phrase, re.IGNORECASE)
-        if len(match) > 0:
-            all_skills[key](phrase, match)
-            return True
+        if re.match(key, phrase, re.IGNORECASE):
+            groups = list(re.search(key, phrase, re.IGNORECASE).groups())
+            return [all_skills[key], phrase, [x for x in groups if x is not None]]
 
-    return False
+    return None

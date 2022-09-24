@@ -1,7 +1,7 @@
-from datetime import datetime, timezone
-from events import global_emitter
-from skills import RegisterSkill, skill
+from skills import Skill
 from word2number import w2n
+
+from utils import TextToSpeech, EndCommand
 
 tokens = {
     "plus": "+",
@@ -14,7 +14,6 @@ tokens = {
 }
 
 token_keys = tokens.keys()
-
 
 def ParseStringToMath(expr):
     latest_unconverted = ""
@@ -39,10 +38,11 @@ def ParseStringToMath(expr):
         return ''
 
 
-@skill(r"^(search for|look up|google)[\s]+(.+)")
-def DoMath(phrase, match):
-    result = ParseStringToMath(match[0][1])
+@Skill(r"^(?:math|arithmetic|calculate)[\s]+(.+)")
+def DoMath(phrase, keywords):
+    result = ParseStringToMath(keywords[0])
     if len(result):
-        global_emitter.emit('say', "The answer is {}".format(str(eval(result))), True)
+        TextToSpeech("The answer is {}".format(str(eval(result))))
     else:
-        global_emitter.emit('say', 'Failed To Parse Mathematical Expression', True)
+        TextToSpeech('Failed To Parse Mathematical Expression')
+    EndCommand()

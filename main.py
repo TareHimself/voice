@@ -1,17 +1,14 @@
 import platform
 
+import events
+
 import wx
+from assistant import Assistant
 from threads.server import server
 from ui import MainWindow
-from skills import skill_applications,skill_arithmetic,skill_search,skill_speech,skill_time,skill_window,skill_spotify
-from threads.collect_input import InputThread
+from skills import skill_applications,skill_arithmetic,skill_search,skill_speech,skill_time,skill_window,skill_spotify,skill_schedule
 
-i = InputThread()
-i.start()
-
-
-
-app = wx.App()
+app = wx.App(False)
 main = MainWindow()
-main.Show()
+assistant = Assistant()
 app.MainLoop()

@@ -4,27 +4,28 @@ Static text with transparent background
 
 import wx
 
+
 class TransparentText(wx.StaticText):
-  def __init__(self, parent, id=wx.ID_ANY, label='',
-               pos=wx.DefaultPosition, size=wx.DefaultSize,
-               style=wx.TRANSPARENT_WINDOW, name='transparenttext'):
-    wx.StaticText.__init__(self, parent, id, label, pos, size, style, name)
+    def __init__(self, parent, id=wx.ID_ANY, label='',
+                 pos=wx.DefaultPosition, size=wx.DefaultSize,
+                 style=wx.TRANSPARENT_WINDOW, name='transparenttext'):
+        wx.StaticText.__init__(self, parent, id, label, pos, size, style, name)
 
-    self.Bind(wx.EVT_PAINT, self.on_paint)
-    self.Bind(wx.EVT_ERASE_BACKGROUND, lambda event: None)
-    self.Bind(wx.EVT_SIZE, self.on_size)
+        self.Bind(wx.EVT_PAINT, self.on_paint)
+        self.Bind(wx.EVT_ERASE_BACKGROUND, lambda event: None)
+        self.Bind(wx.EVT_SIZE, self.on_size)
 
-  def on_paint(self, event):
-    bdc = wx.PaintDC(self)
-    dc = wx.GCDC(bdc)
+    def on_paint(self, event):
+        bdc = wx.PaintDC(self)
+        dc = wx.GCDC(bdc)
 
-    font_face = self.GetFont()
-    font_color = self.GetForegroundColour()
+        font_face = wx.Font(16, wx.DEFAULT, wx.NORMAL, wx.NORMAL, False, "Arial")  # self.GetFont()
+        font_color = self.GetForegroundColour()
 
-    dc.SetFont(font_face)
-    dc.SetTextForeground(font_color)
-    dc.DrawText(self.GetLabel(), 0, 0)
+        dc.SetFont(font_face)
+        dc.SetTextForeground(font_color)
+        dc.DrawText(self.GetLabel(), 0, 0)
 
-  def on_size(self, event):
-    self.Refresh()
-    event.Skip()
+    def on_size(self, event):
+        self.Refresh()
+        event.Skip()

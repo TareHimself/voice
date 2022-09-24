@@ -1,5 +1,4 @@
 import platform
-
 import numpy as np
 import wx
 from constants import wx_visualizer_band_color
@@ -25,30 +24,31 @@ class Visualizer(wx.Panel):
         self.Bind(wx.EVT_TIMER, self.OnTimer, self.timer)
         self.timer.Start(15, wx.TIMER_CONTINUOUS)
         self.status_text = "Starting Up Speech Recognition.."
-        global_emitter.on('say',self.UpdatePhrase)
+        global_emitter.on('send_speech_text', self.UpdatePhrase)
 
     def OnTimer(self, event):
         for index in range(len(self.fft_data)):
             self.fft_smooth_data[index] += (self.fft_data[index] - self.fft_smooth_data[index]) * (
-                        self.timer.GetInterval() / 1000) * SMOOTHING_RATE
+                    self.timer.GetInterval() / 1000) * SMOOTHING_RATE
         self.Refresh()
 
     def OnVoiceData(self, d):
         def scale(item):
             return min(max(np.interp(item, (0, 8000), (0, self.GetSize()[1] * 0.6)), self.bar_width),
                        self.GetSize()[1] * 0.6)
+
         if len(d) != self.channels:
-            raise Exception("Data sent to 'Visualize' has incorrect channels, expected", self.channels ," got ", len(d))
+            raise Exception("Data sent to 'Visualize' has incorrect channels, expected", self.channels, " got ", len(d))
         for x in range(len(d)):
             self.fft_data[x] = scale(d[x])
 
     def DrawBar(self, gc, x, y, w, h, radius):
         if platform.system().lower() == 'darwin':
-            gc.DrawRoundedRectangle((int(x - (w / 2)),int(y - (h / 2))),(int(w),int(h)), radius)
+            gc.DrawRoundedRectangle((int(x - (w / 2)), int(y - (h / 2))), (int(w), int(h)), radius)
         else:
-            gc.DrawRoundedRectangle(x - (w / 2), y - (h / 2), w,h, radius)
+            gc.DrawRoundedRectangle(x - (w / 2), y - (h / 2), w, h, radius)
 
-    def UpdatePhrase(self,phrase,IsComplete):
+    def UpdatePhrase(self, phrase, is_complete):
         self.status_text = phrase
 
     def OnPaint(self, event):
@@ -66,10 +66,10 @@ class Visualizer(wx.Panel):
                          self.fft_smooth_data[channel], self.bar_width / 2)
 
         text_to_draw = self.status_text
-        gc.SetFont(wx.Font(20, wx.DECORATIVE, wx.ITALIC, wx.NORMAL))
+        gc.SetFont(wx.Font(15, wx.DEFAULT, wx.NORMAL, wx.NORMAL, False, "Arial"))
         gc.SetTextForeground(wx_visualizer_band_color)
-        w , h = gc.GetTextExtent(text_to_draw)
+        w, h = gc.GetTextExtent(text_to_draw)
         if platform.system().lower() == 'darwin':
-            gc.DrawText(text_to_draw, (int((size[0] * 0.5) - (0.5 * w)),int((size[1] * 0.8) + h)))
+            gc.DrawText(text_to_draw, (int((size[0] * 0.5) - (0.5 * w)), int((size[1] * 0.8) + h)))
         else:
-            gc.DrawText(text_to_draw,(size[0] * 0.5) - (w / 2),(size[1] * 0.8) + h)
+            gc.DrawText(text_to_draw, (size[0] * 0.5) - (w / 2), (size[1] * 0.8) + h)
