@@ -26,20 +26,7 @@ def ScheduleEvent(phrase, keywords):
             case 'second':
                 end_time += + datetime.timedelta(seconds=1)
     elif op == 'at':
-        time_type = w2n.word_to_num(time_type.strip().lower())
-        match specific:
-            case 'hour':
-                end_time += + datetime.timedelta(hours=time_type)
-            case 'hours':
-                end_time += + datetime.timedelta(hours=time_type)
-            case 'minute':
-                end_time += + datetime.timedelta(minutes=time_type)
-            case 'minutes':
-                end_time += + datetime.timedelta(minutes=time_type)
-            case 'second':
-                end_time += + datetime.timedelta(seconds=time_type)
-            case 'seconds':
-                end_time += + datetime.timedelta(seconds=time_type)
+        pass
     else:
         diff = w2n.word_to_num(keywords[1])
         time_type = keywords[2].lower()[:-1] if keywords[2].endswith('s') else keywords[2].lower()
@@ -51,5 +38,5 @@ def ScheduleEvent(phrase, keywords):
             case 'second':
                 end_time += + datetime.timedelta(seconds=diff)
 
-    ScheduledEvent({'end_at': end_time, "msg": reminder.strip()})
+    ScheduledEvent({'end_at': end_time, "msg":""})
     EndCommand()
