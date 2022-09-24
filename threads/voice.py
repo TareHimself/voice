@@ -51,9 +51,9 @@ class VoiceThread(ThreadEmitter):
                         new_arr = [0 for element in range(len(mags))]
                         max = len(mags)
                         diff = len(mags) // 2
-                        for x in range(len(new_arr)):
-                            new_arr[(x + diff) % max] = mags[x]
-                        self.callback(new_arr)
+                        #for x in range(len(new_arr)):
+                            #new_arr[(x + diff) % max] = mags[x]
+                        self.callback(mags)
                 else:
                     if audio_chunk:
                         self.callback(audio_chunk)
