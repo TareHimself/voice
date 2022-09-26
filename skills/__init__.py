@@ -5,8 +5,14 @@ all_skills = {}
 
 def Skill(regex):
     def inner(func):
-        all_skills[regex] = func
-        return func
+        def wrapper(*args,**kwargs):
+            try:
+                func(*args,**kwargs)
+            except Exception as e:
+                print(e)
+
+        all_skills[regex] = wrapper
+        return wrapper
 
     return inner
 

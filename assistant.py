@@ -38,6 +38,7 @@ class Assistant:
         self.speaker.AddJob('speaker_tts', message)
 
     def OnVoiceProcessed(self, phrase: str, is_complete: bool):
+        print(phrase)
         if not self.model_is_ready:
             DisplayUiMessage(phrase)
             return

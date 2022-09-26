@@ -1,8 +1,6 @@
 import datetime
 import time
-
 from notifypy import Notify
-
 from events import global_emitter
 from events.thread_emitter import ThreadEmitter
 

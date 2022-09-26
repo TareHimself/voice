@@ -4,6 +4,6 @@ from utils import TextToSpeech, EndCommand
 
 
 @Skill(r"^(?:repeat|say|speak|voice)[\s]+(.+)")
-def DisplayTime(phrase, keywords):
+def Speak(phrase, keywords):
     TextToSpeech(keywords[0] + '.')
     EndCommand()

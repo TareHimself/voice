@@ -8,7 +8,6 @@ from scipy.fftpack import fft
 from scipy.interpolate import interp1d
 from events.thread_emitter import ThreadEmitter
 
-print(sd.query_devices())
 CHANNELS = 1
 INPUT_DEVICE = None  # 4
 MAIN_STREAM_SAMPLE_RATE = 44100

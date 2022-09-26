@@ -32,6 +32,7 @@ def GetFollowUp(callback, args=[], kwargs={}):
 
     global_emitter.on('send_followup_text', OnResultReceived)
 
+
 def DownloadFile(url: str, OnProgress: Callable[[int, int], None] = lambda t, p: None):
     f = BytesIO()
     r = requests.get(url, stream=True)
