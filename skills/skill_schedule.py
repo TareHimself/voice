@@ -52,5 +52,5 @@ def ScheduleEvent(phrase, keywords):
                 end_time = end_time + datetime.timedelta(seconds=diff)
 
     ScheduledEvent({'end_at': end_time, "msg": msg.strip()})
-    TextToSpeech('Reminder Added')
+    TextToSpeech('Reminder added.')
     EndCommand()
