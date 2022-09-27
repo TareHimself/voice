@@ -3,3 +3,12 @@
 3. Skills
 4. Speech synthesis
 
+nlu and intent parsing
+https://www.section.io/engineering-education/intent-classification-with-rasa-and-spacy/#installing-rasa-and-spacy
+article above is outdated
+
+
+pip3 install rasa --use-feature=2020-resolver
+https://rasa.com/docs/rasa/nlu-training-data/
+
+RASA IS VERY USEFUL
