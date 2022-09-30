@@ -6,10 +6,11 @@ from threads.scheduled_event import ScheduledEvent
 from utils import EndCommand, TextToSpeech
 
 
-@Skill(r"^(?:remind (?:me (?:to |)|)|schedule)(.*)((at)\s?([a-z0-9]+)\s?([a-z0-9\s]+)?|(?:in)\s?([a-z0-9\s]+)\s(hours?|minutes?|seconds?|days?))")
+@Skill("skill_schedule_add")
 def ScheduleEvent(phrase, keywords):
 
     msg = keywords[0]
+    """
     end_time = datetime.datetime.utcnow()
     op = keywords[2].strip().lower()
     if op == 'tomorrow':
@@ -54,3 +55,4 @@ def ScheduleEvent(phrase, keywords):
     ScheduledEvent({'end_at': end_time, "msg": msg.strip()})
     TextToSpeech('Reminder added.')
     EndCommand()
+    """

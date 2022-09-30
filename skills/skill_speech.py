@@ -3,7 +3,7 @@ from skills import Skill
 from utils import TextToSpeech, EndCommand
 
 
-@Skill(r"^(?:repeat|say|speak|voice)[\s]+(.+)")
+@Skill("skill_self_say")
 def Speak(phrase, keywords):
     TextToSpeech(keywords[0] + '.')
     EndCommand()

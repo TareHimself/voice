@@ -38,7 +38,7 @@ def ParseStringToMath(expr):
         return ''
 
 
-@Skill(r"^(?:math|arithmetic|calculate)[\s]+(.+)")
+@Skill("skill_arithmetic")
 def DoMath(phrase, keywords):
     result = ParseStringToMath(keywords[0])
     if len(result):

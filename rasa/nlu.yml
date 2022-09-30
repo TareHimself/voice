@@ -1,0 +1,135 @@
+version: "3.1"
+
+nlu:
+- intent: skill_music_play
+  examples: |
+    - play [in the name of love](query)
+    - play [girls on boys](query)
+    - play [lilly by alan walker](query)
+    - play [familia](query)
+
+- intent: skill_music_play_specific
+  examples: |
+    - play [track album playlist](type) [in the name of love](query)
+    - play [track album playlist](type) [girls on boys](query)
+    - play [track album playlist](type) [lilly by alan walker](query)
+    - play [track album playlist](type) [familia](query)
+    - play [track album playlist](type) [put it on me](query)
+    - play [track album playlist](type) [girls like you](query)
+    - play [track album playlist](type) [drop it like its hot](query)
+    - play [track album playlist](type) [somebody to lean on](query)
+    - play [track album playlist](type) [shake that ass](query)
+    - play [track album playlist](type) [beethoven](query)
+    - play [track album playlist](type) [solar eclipses](query)
+    - play [track album playlist](type) [monster cat remix](query)
+
+- intent: skill_music_pause
+  examples: |
+    - pause
+    - pause music
+    - pause the song
+
+- intent: skill_music_resume
+  examples: |
+    - resume
+    - resume music
+
+- intent: skill_music_skip
+  examples: |
+    - next song
+    - skip
+
+- intent: skill_app_launch
+  examples: |
+    - launch [spotify](app)
+    - open [google](app)
+    - launch [osu](app)
+    - launch [vscode](app)
+    - open [microsoft edge](app)
+    - open [epic games](app)
+    - launch [steam](app)
+    - launch [no mans sky](app)
+    
+
+- intent: skill_app_close
+  examples: |
+    - close [spotify](app)
+    - quit [google](app)
+    - close [osu](app)
+    - close [vscode](app)
+    - quit [microsoft edge](app)
+    - quit [epic games](app)
+    - close [steam](app)
+    - close [no mans sky](app)
+
+- intent: skill_arithmetic
+  examples: |
+    - what is [twenty five times six](expr)
+    - what is [sixteen plus ten](expr)
+    - what is [nine minus six](expr)
+    - math [twenty five times six](expr)
+    - math [sixteen plus ten](expr)
+    - math [nine minus six](expr)
+    - arithmetic [twenty five times six](expr)
+    - arithmetic [sixteen plus ten](expr)
+    - arithmetic [nine minus six](expr)
+    - calculate [twenty five times six](expr)
+    - calculate [sixteen plus ten](expr)
+    - calculate [nine minus six](expr)
+
+- intent: skill_schedule_add
+  examples: |
+    - remind me to [smoke weed](task) at [five am](time)
+    - remind me to [wake up for school](task) at [ten am](time)
+    - remind me to [take a shit](task) at [twelve pm](time)
+    - remind me to [sleep](task) at [five](time)
+    - remind me to [go for a jog](task) at [six pm](time)
+    - remind me to [stop](task) in an [hour](time)
+    - remind me to [drink water](task) in an [minute](time)
+    - remind me to [jump off my roof](task) in a [second](time)
+    - remind me to [pick up ten cups](task) in [one hour](time) 
+    - remind me to [clone nineteen sheep](task) in [sixty hours](time) 
+    - remind me to [sleep](task) in [forty eight hours](time) 
+    - remind me to [go to sleep](task) in [forty eight hours](time) 
+    - remind me to [call my mother](task) in [twenty five minutes](time) 
+    - remind me to [drink](task) in [ten minutes](time) 
+    - remind me to [do a thing](task) in [fifteen minutes](time) 
+    - remind me to [do my homework](task) in [thirty two seconds](time)
+
+
+- intent: skill_web_search
+  examples: |
+    - look up [men in suits](query)
+    - google [balls in your jaw video](query)
+    - search for [math answers](query)
+
+- intent: skill_self_say
+  examples: |
+    - say [wakanda forever](query)
+    - speak [sea shells and shit](query)
+    - say [can i put this in your mouth](query)
+    - speak [when can i become human](query)
+
+- intent: skill_time
+  examples: |
+    - what time is it
+    - what is the time
+    - time
+
+- intent: skill_self_maximize
+  examples: |
+    - maximize your window
+    - maximize window
+    - maximize
+
+- intent: skill_self_minimize
+  examples: |
+    - minimize your window
+    - minimize window
+    - minimize
+
+- intent: skill_self_restore
+  examples: |
+    - restore your window
+    - restore window
+    - restore

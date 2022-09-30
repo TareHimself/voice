@@ -2,11 +2,9 @@ import base64
 import datetime
 import json
 import webbrowser
-
 import requests
 from word2number import w2n
 from num2words import num2words
-
 from skills import Skill
 from constants import secrets
 from urllib.parse import urlencode
@@ -97,28 +95,28 @@ def SpotifySkillValidation(f):
     return inner
 
 
-@Skill(r"^music pause$")
+@Skill("skill_spotify_pause")
 @SpotifySkillValidation
 def Pause(phrase, keywords):
     requests.put(url="https://api.spotify.com/v1/me/player/pause", headers=header_data)
     EndCommand()
 
 
-@Skill(r"^music resume$")
+@Skill("skill_spotify_resume")
 @SpotifySkillValidation
 def Resume(phrase, keywords):
     requests.put(url="https://api.spotify.com/v1/me/player/play", headers=header_data)
     EndCommand()
 
 
-@Skill(r"^music skip$")
+@Skill("skill_spotify_skip")
 @SpotifySkillValidation
 def Skip(phrase, keywords):
     requests.post(url="https://api.spotify.com/v1/me/player/next", headers=header_data)
     EndCommand()
 
 
-@Skill(r"^(?:play)[\s]+(track|playlist|album|)(.+)")
+@Skill("skill_spotify_play","skill_music_play_specific")
 @SpotifySkillValidation
 def Play(phrase, keywords):
     print(keywords)
@@ -150,7 +148,7 @@ def Play(phrase, keywords):
     EndCommand()
 
 
-@Skill(r"^(?:add)[\s]+(.+)")
+@Skill("skill_spotify_add")
 @SpotifySkillValidation
 def AddToQueue(phrase, keywords):
 
@@ -167,7 +165,7 @@ def AddToQueue(phrase, keywords):
     EndCommand()
 
 
-@Skill(r"^(?:music volume)\s(.+)")
+@Skill("skill_spotify_volume")
 @SpotifySkillValidation
 def ModifyVolume(phrase, keywords):
     try:

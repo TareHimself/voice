@@ -1,0 +1,1 @@
+rasa train nlu -u ./rasa/nlu_data.yml  --fixed-model-name  nlu --out ./ -c ./rasa/config.yml

@@ -19,6 +19,8 @@ model_downloading = False
 
 SHOULD_USE_INPUT = False
 
+MODEL_DIR = "model"
+
 class SpeechRecognitionThread(ThreadEmitter):
 
     def __init__(self, callback=0, onStart=0, samplerate_in=44100):
@@ -59,7 +61,7 @@ class SpeechRecognitionThread(ThreadEmitter):
             global model_downloaded
             global model_downloading
             if not model_downloaded:
-                if not path.exists(path.join(getcwd(), "model")):
+                if not path.exists(path.join(getcwd(),MODEL_DIR)):
                     if model_downloading:
                         print('Waiting for another thread to download model', self.ident)
                         while model_downloading:
@@ -81,13 +83,13 @@ class SpeechRecognitionThread(ThreadEmitter):
                         z.extractall(getcwd())
                         z.close()
                         result.close()
-                        os.rename(path.join(getcwd(),dir_name),path.join(getcwd(),'model'))
+                        os.rename(path.join(getcwd(),dir_name),path.join(getcwd(),MODEL_DIR))
                         model_downloaded = True
                         model_downloading = False
                 else:
                     model_downloaded = True
 
-            self.model = Model(model_path=path.join(getcwd(),'model'))
+            self.model = Model(model_path=path.join(getcwd(),MODEL_DIR))
             self.rec = KaldiRecognizer(self.model, self.samplerate_in)
             self.mic = StartVoice(callback=self.OnVoiceChunk, chunk=8000, samplerate_in=self.samplerate_in,
                                   samplerate_out=self.samplerate_in, is_fft=False)

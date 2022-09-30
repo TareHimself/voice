@@ -8,7 +8,7 @@ from skills import GetCommand
 class MainWindow(wx.Frame):
 
     def __init__(self):
-        super(MainWindow, self).__init__(None, title=main_window_name, size=(1920 / 2, 1080 / 2))
+        super(MainWindow, self).__init__(None, title=main_window_name, size=(int(1920 / 2), int(1080 / 2)))
         self.vis = Visualizer(self, bar_width=7, channels=20)
         self.SetBackgroundColour(wx_color_darkgrey)
         global_emitter.on('window_action', self.DoWindowAction)

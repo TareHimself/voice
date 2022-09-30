@@ -7,7 +7,7 @@ from os import system
 from utils import EndCommand
 
 
-@Skill(r"^(?:open|launch)[\s]+(.+)")
+@Skill("skill_app_open")
 def LaunchApplication(phrase, keywords):
     if platform.system().lower() == 'darwin':
         system('open -a {}.app'.format(keywords[0]))
@@ -20,7 +20,7 @@ def LaunchApplication(phrase, keywords):
     EndCommand()
 
 
-@Skill(r"^(?:close|exit)[\s]+(.+)")
+@Skill("skill_app_close")
 def CloseApplication(phrase, keywords):
     system(f'taskkill /F /FI "WindowTitle eq {keywords[0]}" /T')
     EndCommand()

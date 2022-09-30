@@ -5,7 +5,7 @@ from num2words import num2words
 from utils import DisplayUiMessage, TextToSpeech, EndCommand
 
 
-@Skill(r"^(time|what (time is it|is the time))$")
+@Skill("skill_time")
 def DisplayTime(phrase, keywords):
     current_time = datetime.now(timezone.utc).astimezone()
     time_to_say = 'The time is '
