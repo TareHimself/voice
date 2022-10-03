@@ -1,12 +1,11 @@
 import asyncio
 import threading
 
-from constants import dynamic
-from events import global_emitter
+from core.constants import dynamic
+from core.events import global_emitter
 from core.skills import TryRunCommand
-from threads.speech_recognition import StartSpeechRecognition
-from threads.tts import StartTTS
-from utils import TextToSpeech, DisplayUiMessage
+from core.threads import StartSpeechRecognition,StartTTS
+from core.utils import TextToSpeech, DisplayUiMessage
 from threading import Thread
 
 LOOP_FOR_ASYNC = asyncio.new_event_loop()

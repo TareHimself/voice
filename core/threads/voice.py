@@ -3,7 +3,7 @@ import numpy as np
 import queue
 import sounddevice as sd
 from scipy.fftpack import fft
-from core.events.thread_emitter import ThreadEmitter
+from core.events import ThreadEmitter
 
 CHANNELS = 1
 INPUT_DEVICE = None  # 4

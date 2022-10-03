@@ -1,7 +1,7 @@
 import datetime
 import time
 from notifypy.notify import Notify
-from core.events.thread_emitter import ThreadEmitter
+from core.events import ThreadEmitter
 
 
 class ScheduledEvent(ThreadEmitter):

@@ -1,8 +1,8 @@
 from os import path, getcwd
 from rasa.core.agent import Agent
 from rasa.model_training import train_nlu
-from constants import NLU_PATH, DATA_PATH
-from utils import StartSkill, EndSkill, TextToSpeech
+from core.constants import NLU_PATH, DATA_PATH
+from core.utils import StartSkill, EndSkill, TextToSpeech
 
 if not path.exists(NLU_PATH):
     train_nlu(config=path.join(getcwd(), 'rasa', 'config.yml'), nlu_data=path.join(getcwd(), 'rasa', 'nlu.yml'),

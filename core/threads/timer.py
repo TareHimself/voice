@@ -1,5 +1,5 @@
 import time
-from core.events.thread_emitter import ThreadEmitter
+from core.events import ThreadEmitter
 
 active_timers = {}
 

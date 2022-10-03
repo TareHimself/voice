@@ -1,5 +1,4 @@
-from core.events import global_emitter
-from core.events import ThreadEmitter
+from core.events import global_emitter, ThreadEmitter
 
 
 class InputThread(ThreadEmitter):

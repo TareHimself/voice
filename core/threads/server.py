@@ -1,10 +1,9 @@
 # V3
 import base64
 from threading import Thread
-
 import requests
 from flask import Flask, request
-from core.events.thread_emitter import ThreadEmitter
+from core.events import ThreadEmitter
 from core.constants import config
 
 

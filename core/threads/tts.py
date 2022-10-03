@@ -2,7 +2,7 @@
 import os
 import torch
 import sounddevice as sd
-from core.events.thread_emitter import ThreadEmitter
+from core.events import ThreadEmitter
 from core.constants import TTS_SPEAKER,TTS_PATH,TTS_URL
 device = torch.device('cpu')
 torch.set_num_threads(8)

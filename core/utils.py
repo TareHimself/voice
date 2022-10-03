@@ -3,9 +3,8 @@ import uuid
 from io import BytesIO
 import requests
 from typing import Callable
-from events import global_emitter
-
-from threads.timer import StartTimer, StopTimer
+from core.events import global_emitter
+from core.threads import StartTimer, StopTimer
 
 
 def TextToSpeech(msg):

@@ -19,7 +19,8 @@ VOSK_MODEL_URL = "https://alphacephei.com/vosk/models/vosk-model-en-us-daanzu-20
 main_window_name = "Voice"
 
 if not path.exists(CONFIG_PATH):
-    json.dump({},CONFIG_PATH,indent=4)
+    with open(CONFIG_PATH,'w') as outf:
+        json.dump({},outf,indent=4)
 
 config = {}
 with open(CONFIG_PATH, "r") as infile:

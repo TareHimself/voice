@@ -1,16 +1,30 @@
 import json
 import os
 import time
+from io import BytesIO
 from typing import Callable
+
+import requests
 from vosk import Model, KaldiRecognizer, SetLogLevel
 from os import getcwd, path
 from core.constants import VOSK_MODEL_URL, TTS_PATH
-from core.events import global_emitter
-from core.events.thread_emitter import ThreadEmitter
-from core.threads.voice import StartVoice
+from core.events import global_emitter, ThreadEmitter
+from .voice import StartVoice
+from .collect_input import InputThread
 from zipfile import ZipFile
-from core.threads.collect_input import InputThread
-from core.utils import DownloadFile
+
+
+def DownloadFile(url: str, OnProgress: Callable[[int, int], None] = lambda t, p: None):
+    f = BytesIO()
+    r = requests.get(url, stream=True)
+    total = r.headers["Content-Length"]
+
+    for chunk in r.iter_content(1024):
+        f.write(chunk)
+        OnProgress(total, f.getbuffer().nbytes)
+
+    return f
+
 
 SetLogLevel(-1)
 
@@ -18,6 +32,7 @@ model_downloaded = False
 model_downloading = False
 
 SHOULD_USE_INPUT = True
+
 
 class SpeechRecognitionThread(ThreadEmitter):
 
