@@ -1,8 +1,7 @@
 import wx
-from constants import main_window_name,dynamic
-from events import global_emitter
+from core.constants import main_window_name,dynamic
+from core.events import global_emitter
 from ui.visualizer import Visualizer
-from skills import TryRunCommand
 
 
 class MainWindow(wx.Frame):

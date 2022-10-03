@@ -1,9 +1,8 @@
-import platform
 import numpy as np
 import wx
-from constants import dynamic
-from events import global_emitter
-from threads.voice import StartVoice
+from core.constants import dynamic
+from core.events import global_emitter
+from core.threads import StartVoice
 
 SMOOTHING_RATE = 15
 
