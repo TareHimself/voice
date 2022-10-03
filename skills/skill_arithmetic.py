@@ -1,7 +1,7 @@
 from skills import Skill
 from word2number import w2n
 
-from utils import TextToSpeech, EndCommand
+from utils import TextToSpeech, EndSkill
 
 tokens = {
     "plus": "+",
@@ -14,6 +14,7 @@ tokens = {
 }
 
 token_keys = tokens.keys()
+
 
 def ParseStringToMath(expr):
     latest_unconverted = ""
@@ -39,10 +40,9 @@ def ParseStringToMath(expr):
 
 
 @Skill("skill_arithmetic")
-def DoMath(phrase, keywords):
-    result = ParseStringToMath(keywords[0])
+async def DoMath(phrase, entities):
+    result = ParseStringToMath(entities[0])
     if len(result):
         TextToSpeech("The answer is {}".format(str(eval(result))))
     else:
         TextToSpeech('Failed To Parse Mathematical Expression')
-    EndCommand()

@@ -4,23 +4,19 @@ import pyautogui
 import pyperclip as pc
 from os import system
 
-from utils import EndCommand
-
 
 @Skill("skill_app_open")
-def LaunchApplication(phrase, keywords):
+async def LaunchApplication(phrase, entities):
+    print(entities)
     if platform.system().lower() == 'darwin':
-        system('open -a {}.app'.format(keywords[0]))
+        system('open -a {}.app'.format(entities['app']))
     else:
         pyautogui.hotkey('win', 's')
-        pc.copy(keywords[0])
+        pc.copy(entities['app'])
         pyautogui.hotkey('ctrl', 'v')
         pyautogui.press("enter")
 
-    EndCommand()
-
 
 @Skill("skill_app_close")
-def CloseApplication(phrase, keywords):
-    system(f'taskkill /F /FI "WindowTitle eq {keywords[0]}" /T')
-    EndCommand()
+async def CloseApplication(phrase, entities):
+    system('taskkill /F /FI "WindowTitle eq {}" /T'.format(entities['app']))

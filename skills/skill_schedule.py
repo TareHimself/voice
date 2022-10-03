@@ -3,20 +3,20 @@ import datetime
 from word2number import w2n
 from skills import Skill
 from threads.scheduled_event import ScheduledEvent
-from utils import EndCommand, TextToSpeech
+from utils import EndSkill, TextToSpeech
 
 
 @Skill("skill_schedule_add")
-def ScheduleEvent(phrase, keywords):
+async def ScheduleEvent(phrase, entities):
 
-    msg = keywords[0]
+    msg = entities[0]
     """
     end_time = datetime.datetime.utcnow()
-    op = keywords[2].strip().lower()
+    op = entities[2].strip().lower()
     if op == 'tomorrow':
         end_time = end_time + datetime.timedelta(days=1)
     elif op == 'an' or op == 'a':
-        time_type = keywords[3].lower()[:-1] if keywords[3].endswith('s') else keywords[3].lower()
+        time_type = entities[3].lower()[:-1] if entities[3].endswith('s') else entities[3].lower()
         match time_type:
             case 'day':
                 end_time = end_time + datetime.timedelta(days=1)
@@ -27,11 +27,11 @@ def ScheduleEvent(phrase, keywords):
             case 'second':
                 end_time = end_time + datetime.timedelta(seconds=1)
     elif op == 'at':
-        diff_hours = w2n.word_to_num(keywords[3])
+        diff_hours = w2n.word_to_num(entities[3])
         diff_minutes = 0
-        if len(keywords) > 3:
+        if len(entities) > 3:
             try:
-                diff_minutes = w2n.word_to_num(keywords[4])
+                diff_minutes = w2n.word_to_num(entities[4])
             except ValueError as e:
                 print(e)
 
@@ -40,8 +40,8 @@ def ScheduleEvent(phrase, keywords):
         now.minute = diff_minutes
         end_time = now.astimezone()
     else:
-        diff = w2n.word_to_num(keywords[2])
-        time_type = keywords[3].lower()[:-1] if keywords[3].endswith('s') else keywords[3].lower()
+        diff = w2n.word_to_num(entities[2])
+        time_type = entities[3].lower()[:-1] if entities[3].endswith('s') else entities[3].lower()
         match time_type:
             case 'day':
                 end_time = end_time + datetime.timedelta(days=diff)

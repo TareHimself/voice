@@ -1,7 +1,7 @@
 import platform
 import numpy as np
 import wx
-from constants import wx_visualizer_band_color
+from constants import dynamic
 from events import global_emitter
 from threads.voice import StartVoice
 
@@ -52,8 +52,8 @@ class Visualizer(wx.Panel):
 
         pdc = wx.PaintDC(self)
         gc = wx.GCDC(pdc)
-        gc.SetPen(wx.Pen(wx_visualizer_band_color, 2))
-        gc.SetBrush(wx.Brush(wx_visualizer_band_color))
+        gc.SetPen(wx.Pen(dynamic.wx_visualizer_band_color, 2))
+        gc.SetBrush(wx.Brush(dynamic.wx_visualizer_band_color))
         size = self.GetSize()
         desired_size = max(500, (self.channels * 6) * self.bar_width)
         padding = (size[0] - (size[0] * (desired_size / size[0]))) / 2 if desired_size / size[0] < 1 else 1
@@ -64,6 +64,6 @@ class Visualizer(wx.Panel):
 
         text_to_draw = self.status_text
         gc.SetFont(wx.Font(15, wx.DEFAULT, wx.NORMAL, wx.NORMAL, False, "Arial"))
-        gc.SetTextForeground(wx_visualizer_band_color)
+        gc.SetTextForeground(dynamic.wx_visualizer_band_color)
         w, h = gc.GetTextExtent(text_to_draw)
         gc.DrawText(text_to_draw, (int((size[0] * 0.5) - (0.5 * w)), int((size[1] * 0.8) + h)))

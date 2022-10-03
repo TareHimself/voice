@@ -2,11 +2,11 @@ from datetime import  datetime, timezone
 from skills import  Skill
 from num2words import num2words
 
-from utils import DisplayUiMessage, TextToSpeech, EndCommand
+from utils import TextToSpeech
 
 
 @Skill("skill_time")
-def DisplayTime(phrase, keywords):
+async def DisplayTime(phrase, entities):
     current_time = datetime.now(timezone.utc).astimezone()
     time_to_say = 'The time is '
 
@@ -17,5 +17,3 @@ def DisplayTime(phrase, keywords):
             time_to_say += word + " "
 
     TextToSpeech(time_to_say)
-    DisplayUiMessage("The time is {}".format(current_time.strftime('%I:%M %p')))
-    EndCommand()

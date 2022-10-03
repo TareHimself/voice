@@ -1,8 +1,8 @@
 import wx
-from constants import main_window_name, wx_color_darkgrey, wake_word
+from constants import main_window_name,dynamic
 from events import global_emitter
 from ui.visualizer import Visualizer
-from skills import GetCommand
+from skills import TryRunCommand
 
 
 class MainWindow(wx.Frame):
@@ -10,7 +10,7 @@ class MainWindow(wx.Frame):
     def __init__(self):
         super(MainWindow, self).__init__(None, title=main_window_name, size=(int(1920 / 2), int(1080 / 2)))
         self.vis = Visualizer(self, bar_width=7, channels=20)
-        self.SetBackgroundColour(wx_color_darkgrey)
+        self.SetBackgroundColour(dynamic.wx_color_darkgrey)
         global_emitter.on('window_action', self.DoWindowAction)
         self.Show()
 
