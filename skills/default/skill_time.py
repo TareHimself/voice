@@ -1,5 +1,5 @@
 from datetime import  datetime, timezone
-from skill_dev import  Skill
+from core.skills import  Skill
 from num2words import num2words
 
 from core.utils import TextToSpeech

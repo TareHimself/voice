@@ -1,10 +1,19 @@
 import asyncio
+import hashlib
 import uuid
 from io import BytesIO
+import aiohttp
 import requests
+from threading import Thread
 from typing import Callable
 from core.events import global_emitter
 from core.threads import StartTimer, StopTimer
+
+
+async def GetNluData(phrase):
+    async with aiohttp.ClientSession() as session:
+        async with session.get("http://localhost:8097/parse?q={}".format(phrase)) as resp:
+            return await resp.json()
 
 
 def TextToSpeech(msg):
@@ -69,3 +78,27 @@ def DownloadFile(url: str, OnProgress: Callable[[int, int], None] = lambda t, p:
         OnProgress(total, f.getbuffer().nbytes)
 
     return f
+
+
+
+async def GetFileHash(dir:str,block_size=65536):
+    loop = asyncio.get_event_loop()
+    task_return = asyncio.Future()
+    file_hash = hashlib.sha256()
+
+    def HashThread():
+        with open(dir, 'rb') as f:
+            fb = f.read(block_size)
+            while len(fb) > 0:
+                loop.call_soon_threadsafe(file_hash.update, fb)
+                (fb)
+                fb = f.read(block_size)
+            loop.call_soon_threadsafe(task_return.set_result,file_hash)
+    
+    Thread(daemon=True,target=HashThread,group=None).start()
+    
+    result = await task_return
+
+    return result
+    
+

@@ -7,7 +7,7 @@ from typing import Callable
 import requests
 from vosk import Model, KaldiRecognizer, SetLogLevel
 from os import getcwd, path
-from core.constants import VOSK_MODEL_URL, TTS_PATH
+from core.constants import VOSK_MODEL_URL, STT_PATH
 from core.events import global_emitter, ThreadEmitter
 from .voice import StartVoice
 from .collect_input import InputThread
@@ -31,7 +31,7 @@ SetLogLevel(-1)
 model_downloaded = False
 model_downloading = False
 
-SHOULD_USE_INPUT = True
+SHOULD_USE_INPUT = False
 
 
 class SpeechRecognitionThread(ThreadEmitter):
@@ -63,18 +63,19 @@ class SpeechRecognitionThread(ThreadEmitter):
 
     def OnInputFromUser(self, msg):
         if callable(self.callback):
-            self.callback(msg, True)
+            self.callback(msg, True,True)
 
     def run(self):
+        global_emitter.on('user_input', self.OnInputFromUser)
+        
         if SHOULD_USE_INPUT:
             i = InputThread()
             i.start()
-            global_emitter.on('user_input', self.OnInputFromUser)
         else:
             global model_downloaded
             global model_downloading
             if not model_downloaded:
-                if not path.exists(path.join(getcwd(), TTS_PATH)):
+                if not path.exists(path.join(getcwd(), STT_PATH)):
                     if model_downloading:
                         while model_downloading:
                             time.sleep(3)
@@ -95,13 +96,13 @@ class SpeechRecognitionThread(ThreadEmitter):
                         z.extractall(getcwd())
                         z.close()
                         result.close()
-                        os.rename(path.join(getcwd(), dir_name), path.join(getcwd(), TTS_PATH))
+                        os.rename(path.join(getcwd(), dir_name), path.join(getcwd(), STT_PATH))
                         model_downloaded = True
                         model_downloading = False
                 else:
                     model_downloaded = True
 
-            self.model = Model(model_path=path.join(getcwd(), TTS_PATH))
+            self.model = Model(model_path=path.join(getcwd(), STT_PATH))
             self.rec = KaldiRecognizer(self.model, self.samplerate_in)
             self.mic = StartVoice(callback=self.OnVoiceChunk, chunk=8000, samplerate_in=self.samplerate_in,
                                   samplerate_out=self.samplerate_in, is_fft=False)

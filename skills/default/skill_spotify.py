@@ -1,5 +1,5 @@
 import base64
-import datetime
+from datetime import datetime,timedelta
 import json
 import webbrowser
 import requests
@@ -29,25 +29,26 @@ def UpdateHeader(auth):
 
 
 def OnSpotifyAuthReceived(auth):
-    global spotify_auth
-    global spotify_auth_refresh
-    spotify_auth = auth
-    spotify_auth_refresh = datetime.datetime.utcnow() + datetime.timedelta(seconds=spotify_auth['expires_in'])
-    spotify_auth['expires_at'] = spotify_auth_refresh.isoformat()
-    del spotify_auth['expires_in']
-    UpdateHeader(auth)
-    with open(SPOTIFY_AUTH_PATH, "w") as outfile:
-        json.dump(spotify_auth, outfile, indent=4)
+    if 'expires_in' in auth.keys(): 
+        global spotify_auth
+        global spotify_auth_refresh
+        spotify_auth = auth
+        spotify_auth_refresh = datetime.utcnow() + timedelta(seconds=spotify_auth['expires_in'])
+        spotify_auth['expires_at'] = spotify_auth_refresh.isoformat()
+        del spotify_auth['expires_in']
+        UpdateHeader(auth)
+        with open(SPOTIFY_AUTH_PATH, "w") as outfile:
+            json.dump(spotify_auth, outfile, indent=4)
 
 
 def ValidateSpotifyAuth():
     global spotify_auth
     global spotify_auth_refresh
-
-    if not spotify_auth_refresh:
+    if not spotify_auth_refresh or 'spotify' not in config.keys():
         return False
-
-    if spotify_auth_refresh < datetime.datetime.utcnow():
+    
+    utc_now = datetime.utcnow()
+    if spotify_auth_refresh < utc_now:
         payload = {
             'grant_type': 'refresh_token',
             "refresh_token": spotify_auth['refresh_token'],
@@ -59,8 +60,7 @@ def ValidateSpotifyAuth():
                    'Content-Type': 'application/x-www-form-urlencoded'}
         url = "https://accounts.spotify.com/api/token"
         auth_data = requests.post(url=url, headers=headers, data=payload).json()
-        print(auth_data)
-        spotify_auth_refresh = datetime.datetime.utcnow() + datetime.timedelta(seconds=auth_data['expires_in'])
+        spotify_auth_refresh = utc_now + timedelta(seconds=auth_data['expires_in'])
         spotify_auth['access_token'] = auth_data['access_token']
         spotify_auth['expires_at'] = spotify_auth_refresh.isoformat()
         UpdateHeader(spotify_auth)
@@ -81,7 +81,7 @@ if not spotify_auth:
     else:
         with open(SPOTIFY_AUTH_PATH, "r") as infile:
             spotify_auth = json.load(infile)
-            spotify_auth_refresh = datetime.datetime.fromisoformat(spotify_auth['expires_at'])
+            spotify_auth_refresh = datetime.fromisoformat(spotify_auth['expires_at'])
             ValidateSpotifyAuth()
             UpdateHeader(spotify_auth)
 
@@ -95,33 +95,35 @@ def SpotifySkillValidation(f):
     return inner
 
 
-@Skill("skill_music_pause")
+@Skill("skill_spotify_pause")
 @SpotifySkillValidation
 async def Pause(phrase, entities):
     requests.put(url="https://api.spotify.com/v1/me/player/pause", headers=header_data)
 
 
-@Skill("skill_music_resume")
+@Skill("skill_spotify_resume")
 @SpotifySkillValidation
 async def Resume(phrase, entities):
     requests.put(url="https://api.spotify.com/v1/me/player/play", headers=header_data)
 
 
-@Skill("skill_music_skip")
+@Skill("skill_spotify_skip")
 @SpotifySkillValidation
 async def Skip(phrase, entities):
     requests.post(url="https://api.spotify.com/v1/me/player/next", headers=header_data)
 
 
-@Skill("skill_music_play", "skill_music_play_specific")
+@Skill("skill_spotify_play", "skill_spotify_play_specific")
 @SpotifySkillValidation
 async def Play(phrase, entities):
     type_to_play = "track"
     item_name = entities['music_query']
 
-    if 'type' in entities.keys() == 0:
+
+    if 'type' in entities.keys():
         type_to_play = entities['type']
 
+    print('entities',entities)
     result = requests.get(url="https://api.spotify.com/v1/search", headers=header_data, params={
         "q": item_name,
         "type": [type_to_play]
@@ -130,9 +132,9 @@ async def Play(phrase, entities):
     query = '{}s'.format(type_to_play)
     if result[query] and len(result[query]['items']) > 0:
         if type_to_play == 'track':
-            print(requests.put(url="https://api.spotify.com/v1/me/player/play", headers=header_data, json={
+            requests.put(url="https://api.spotify.com/v1/me/player/play", headers=header_data, json={
                 'uris': [result[query]['items'][0]['uri']]
-            }).content)
+            }).content
         else:
 
             requests.put(url="https://api.spotify.com/v1/me/player/play", headers=header_data, json={
@@ -162,7 +164,6 @@ async def AddToQueue(phrase, entities):
 @SpotifySkillValidation
 async def ModifyVolume(phrase, entities):
     try:
-        print(entities)
         volume = int(w2n.word_to_num(entities[0].strip()))
 
         if volume < 0 or volume > 100:

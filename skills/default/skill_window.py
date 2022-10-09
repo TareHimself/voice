@@ -6,7 +6,6 @@ from core.skills import Skill
 async def MaximizeWindow(phrase, entities):
     global_emitter.emit('window_action', "maximize")
 
-
 @Skill("skill_self_minimize")
 async def MinimizeWindow(phrase, entities):
     global_emitter.emit('window_action', "minimize")

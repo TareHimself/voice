@@ -1,0 +1,198 @@
+{
+  "nlu": [
+    {
+      "intent": "skill_spotify_play",
+      "examples": [
+        "play [in the name of love](music_query)",
+        "play [girls on boys](music_query)",
+        "play [lilly by alan walker](music_query)",
+        "play [familia](music_query)",
+        "play [genius by sia](music_query)",
+        "play [genius](music_query)"
+      ]
+    },
+    {
+      "intent": "skill_spotify_play_specific",
+      "examples": [
+        "play [track album playlist](type) [in the name of love](music_query)",
+        "play [track album playlist](type) [girls on boys](music_query)",
+        "play [track album playlist](type) [lilly by alan walker](music_query)",
+        "play [track album playlist](type) [familia](music_query)",
+        "play [track album playlist](type) [put it on me](music_query)",
+        "play [track album playlist](type) [girls like you](music_query)",
+        "play [track album playlist](type) [drop it like its hot](music_query)",
+        "play [track album playlist](type) [somebody to lean on](music_query)",
+        "play [track album playlist](type) [shake that ass](music_query)",
+        "play [track album playlist](type) [beethoven](music_query)",
+        "play [track album playlist](type) [solar eclipses](music_query)",
+        "play [track album playlist](type) [monster cat remix](music_query)",
+        "play [track album playlist](type) [nova](music_query)",
+        "play [track album playlist](type) [program](music_query)",
+        "play [track album playlist](type) [genius](music_query)"
+      ]
+    },
+    {
+      "regex": "type",
+      "examples": [
+        "track|album|playlist"
+      ]
+    },
+    {
+      "intent": "skill_spotify_pause",
+      "examples": [
+        "pause",
+        "pause music",
+        "pause the song"
+      ]
+    },
+    {
+      "intent": "skill_spotify_resume",
+      "examples": [
+        "resume",
+        "resume music"
+      ]
+    },
+    {
+      "intent": "skill_spotify_skip",
+      "examples": [
+        "next song",
+        "skip"
+      ]
+    },
+    {
+      "intent": "skill_spotify_volume",
+      "examples": [
+        "music volume [twenty five](music_volume)",
+        "volume music [ten](music_volume) percent",
+        "music volume [seventy](music_volume) percent",
+        "volume music [sixty nine](music_volume) percent"
+      ]
+    },
+    {
+      "intent": "skill_app_open",
+      "examples": [
+        "launch [spotify](app)",
+        "open [google](app)",
+        "launch [in the morning i will die](app)",
+        "open [my balls n your jaw](app)",
+        "launch [microsoft edge](app)",
+        "open [epic games](app)",
+        "launch [keyboard maker](app)",
+        "open [mic tuner](app)",
+        "launch [supa hot fire](app)",
+        "open [sexy ladies](app)",
+        "launch [no mans sky](app)",
+        "open [genshin impact](app)"
+      ]
+    },
+    {
+      "intent": "skill_app_close",
+      "examples": [
+        "close [spotify](app)",
+        "quit [google](app)",
+        "close [osu](app)",
+        "close [vscode](app)",
+        "quit [microsoft edge](app)",
+        "quit [epic games](app)",
+        "close [steam](app)",
+        "close [no mans sky](app)"
+      ]
+    },
+    {
+      "intent": "skill_arithmetic",
+      "examples": [
+        "what is [twenty five times six](math_expr)",
+        "what is [sixteen plus ten](math_expr)",
+        "what is [nine minus six](math_expr)",
+        "math [twenty five times six](math_expr)",
+        "math [sixteen plus ten](math_expr)",
+        "math [nine minus six](math_expr)",
+        "arithmetic [twenty five times six](math_expr)",
+        "arithmetic [sixteen plus ten](math_expr)",
+        "arithmetic [nine minus six](math_expr)",
+        "calculate [twenty five times six](math_expr)",
+        "calculate [sixteen plus ten](math_expr)",
+        "calculate [nine minus six](math_expr)"
+      ]
+    },
+    {
+      "intent": "skill_schedule_add",
+      "examples": [
+        "remind me to [smoke weed](schedule_task) at [five am](time)",
+        "remind me to [wake up for school](schedule_task) at [ten am](time)",
+        "remind me to [take a shit](schedule_task) by [twelve pm](time)",
+        "remind me to [sleep](schedule_task) by [five](time)",
+        "remind me to [go for a jog](schedule_task) at [six pm](time)",
+        "remind me to [stop](schedule_task) in an [hour](time)",
+        "remind me to [drink water](schedule_task) in an [minute](time)",
+        "remind me to [jump off my roof](schedule_task) in a [second](time)",
+        "remind me to [pick up ten cups](schedule_task) in [one hour](time)",
+        "remind me to [clone nineteen sheep](schedule_task) in [sixty hours](time)",
+        "remind me to [sleep](schedule_task) in [forty eight hours](time)",
+        "remind me to [go to sleep](schedule_task) in [forty eight hours](time)",
+        "remind me to [call my mother](schedule_task) in [twenty five minutes](time)",
+        "remind me to [drink](schedule_task) in [ten minutes](time)",
+        "remind me to [swim](schedule_task) in [ten minutes](time)",
+        "remind me to [do a thing](schedule_task) in [fifteen minutes](time)",
+        "remind me to [do my homework](schedule_task) in [thirty two seconds](time)"
+      ]
+    },
+    {
+      "intent": "skill_web_search",
+      "examples": [
+        "look up [men in suits](web_search)",
+        "google [balls in your jaw video](web_search)",
+        "search for [math answers](web_search)"
+      ]
+    },
+    {
+      "intent": "skill_self_say",
+      "examples": [
+        "say [wakanda forever](speech_text)",
+        "speak [sea shells and shit](speech_text)",
+        "say [can i put this in your mouth](speech_text)",
+        "speak [when can i become human](speech_text)"
+      ]
+    },
+    {
+      "intent": "skill_time",
+      "examples": [
+        "what time is it",
+        "what is the time",
+        "time"
+      ]
+    },
+    {
+      "intent": "skill_self_maximize",
+      "examples": [
+        "maximize your window",
+        "maximize window",
+        "maximize"
+      ]
+    },
+    {
+      "intent": "skill_self_minimize",
+      "examples": [
+        "minimize your window",
+        "minimize window",
+        "minimize"
+      ]
+    },
+    {
+      "intent": "skill_self_restore",
+      "examples": [
+        "restore your window",
+        "restore window",
+        "restore"
+      ]
+    },
+    {
+      "intent": "skill_affirm",
+      "examples": [
+        "Yes",
+        "sure",
+        "ok"
+      ]
+    }
+  ]
+}
