@@ -64,7 +64,9 @@ words_to_num_operators = {
     "hundred": 100,
     "thousand": 1000,
     "million": 1000000,
-    "billion": 1000000,
+    "billion": 1000000000,
+    "trillion": 1000000000000,
+    "quadrillion": 1000000000000000
 }
 
 num_to_words_operators = {
@@ -72,6 +74,8 @@ num_to_words_operators = {
     1: "thousand",
     2: "million",
     3: "billion",
+    4: "trillion",
+    5: "quadrillion"
 }
 
 

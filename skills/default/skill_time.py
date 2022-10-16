@@ -5,8 +5,8 @@ from num2words import num2words
 from core.utils import TextToSpeech
 
 
-@Skill("skill_time")
-async def DisplayTime(phrase, entities):
+@Skill(["skill_time"])
+async def DisplayTime(phrase, args):
     current_time = datetime.now(timezone.utc).astimezone()
     time_to_say = 'The time is '
 

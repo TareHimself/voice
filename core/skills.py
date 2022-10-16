@@ -2,11 +2,12 @@ from os import path, getcwd, listdir
 import traceback
 from core.constants import NLU_PATH, DATA_PATH
 from core.utils import GetNluData, StartSkill, EndSkill, TextToSpeech
-
+import re
 all_skills = {}
+params_extractors = {}
 
 
-def Skill(*intents):
+def Skill(intents=[],params_regex=r".*"):
     def inner(func):
         async def wrapper(*args, **kwargs):
             StartSkill()
@@ -20,6 +21,7 @@ def Skill(*intents):
 
         for intent in intents:
             all_skills[intent] = wrapper
+            params_extractors[intent] = params_regex
 
         return wrapper
 
@@ -36,18 +38,27 @@ def EntitiesToDict(e):
 
 
 async def TryRunCommand(phrase):
-    parsed = await GetNluData(phrase)
+    try:
+        parsed = await GetNluData(phrase)
+        
+        if len(parsed['error']) == 0:
+            parsed = parsed['data']
+        else:
+            print(parsed['error'])
+            return
 
-    if len(parsed['error']) == 0:
-        parsed = parsed['data']
-    else:
-        print(parsed['error'])
-        return
+        if parsed['intent']['confidence'] >= 0.89 and parsed['intent']['name'] in all_skills.keys():
+            sk = all_skills[parsed['intent']['name']]
+            reg = params_extractors[parsed['intent']['name']]
+            match = re.match(reg,phrase,re.IGNORECASE)
+            print(match,reg)
+            if match:
+                await all_skills[parsed['intent']['name']](phrase, match.groups())
+                return
 
-    if parsed['intent']['confidence'] >= 0.89 and parsed['intent']['name'] in all_skills.keys():
-        await all_skills[parsed['intent']['name']](phrase, EntitiesToDict(parsed['entities']))
-    else:
         TextToSpeech("I cannot answer that yet.")
-
+    except Exception as e:
+        print(e)
+        print(traceback.format_exc())
     return
 

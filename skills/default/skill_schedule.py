@@ -1,16 +1,25 @@
+from ast import arg
 from core.skills import Skill
 from parsedatetime import Calendar
 from pytz import timezone
-from core.threads import ScheduledEvent
+from scheduled_event import ScheduledEvent
 from core.utils import TextToSpeech
+from str2time import stringToTime
 cal = Calendar()
 tz = timezone("US/Eastern")
-@Skill("skill_schedule_add")
-async def ScheduleEvent(phrase, entities):
+@Skill(["skill_schedule_add"],r"(?:remind (?:me (?:to )))?([a-zA-Z ]+?)(?:\sin(?: a| an)?|\sat)\s(.*)")
+async def ScheduleEvent(phrase, args):
 
-    if 'time' in entities.keys() and 'schedule_task' in entities.keys():
-        end_time = cal.parseDT(datetimeString=entities['time'], tzinfo=tz)[0]
+    task , time = args
+    print(args)
+    end_time = stringToTime(time,tz)
 
-        ScheduledEvent({'end_at': end_time, "msg": entities['schedule_task']})
-
+    if end_time:
+        ScheduledEvent({'end_at': end_time, "msg": task})
+        print(task,end_time)
         TextToSpeech('Reminder added.')
+    else:
+        TextToSpeech('I am unable to parse the time.')
+        
+
+        

@@ -3,38 +3,13 @@
     {
       "intent": "skill_spotify_play",
       "examples": [
-        "play [in the name of love](music_query)",
-        "play [girls on boys](music_query)",
-        "play [lilly by alan walker](music_query)",
-        "play [familia](music_query)",
-        "play [genius by sia](music_query)",
-        "play [genius](music_query)"
-      ]
-    },
-    {
-      "intent": "skill_spotify_play_specific",
-      "examples": [
-        "play [track album playlist](type) [in the name of love](music_query)",
-        "play [track album playlist](type) [girls on boys](music_query)",
-        "play [track album playlist](type) [lilly by alan walker](music_query)",
-        "play [track album playlist](type) [familia](music_query)",
-        "play [track album playlist](type) [put it on me](music_query)",
-        "play [track album playlist](type) [girls like you](music_query)",
-        "play [track album playlist](type) [drop it like its hot](music_query)",
-        "play [track album playlist](type) [somebody to lean on](music_query)",
-        "play [track album playlist](type) [shake that ass](music_query)",
-        "play [track album playlist](type) [beethoven](music_query)",
-        "play [track album playlist](type) [solar eclipses](music_query)",
-        "play [track album playlist](type) [monster cat remix](music_query)",
-        "play [track album playlist](type) [nova](music_query)",
-        "play [track album playlist](type) [program](music_query)",
-        "play [track album playlist](type) [genius](music_query)"
-      ]
-    },
-    {
-      "regex": "type",
-      "examples": [
-        "track|album|playlist"
+        "play in the name of love",
+        "play girls on boys]",
+        "play track lilly by alan walker",
+        "play playlist familia",
+        "play albumn genius by sia",
+        "play track genius",
+        "play lean on me"
       ]
     },
     {
@@ -62,96 +37,92 @@
     {
       "intent": "skill_spotify_volume",
       "examples": [
-        "music volume [twenty five](music_volume)",
-        "volume music [ten](music_volume) percent",
-        "music volume [seventy](music_volume) percent",
-        "volume music [sixty nine](music_volume) percent"
+        "music volume twenty five",
+        "volume music ten percent",
+        "music volume seventy percent",
+        "volume music sixty nine percent"
       ]
     },
     {
       "intent": "skill_app_open",
       "examples": [
-        "launch [spotify](app)",
-        "open [google](app)",
-        "launch [in the morning i will die](app)",
-        "open [my balls n your jaw](app)",
-        "launch [microsoft edge](app)",
-        "open [epic games](app)",
-        "launch [keyboard maker](app)",
-        "open [mic tuner](app)",
-        "launch [supa hot fire](app)",
-        "open [sexy ladies](app)",
-        "launch [no mans sky](app)",
-        "open [genshin impact](app)"
+        "launch spotify",
+        "open google",
+        "launch in the morning i will die",
+        "open my balls n your jaw",
+        "launch microsoft edge",
+        "open epic games",
+        "launch keyboard maker",
+        "open mic tuner",
+        "launch supa hot fire",
+        "open sexy ladies",
+        "launch no mans sky",
+        "open genshin impact"
       ]
     },
     {
       "intent": "skill_app_close",
       "examples": [
-        "close [spotify](app)",
-        "quit [google](app)",
-        "close [osu](app)",
-        "close [vscode](app)",
-        "quit [microsoft edge](app)",
-        "quit [epic games](app)",
-        "close [steam](app)",
-        "close [no mans sky](app)"
+        "close spotify",
+        "quit google",
+        "close osu",
+        "close vscode",
+        "quit microsoft edge",
+        "quit epic games",
+        "close steam",
+        "close no mans sky"
       ]
     },
     {
       "intent": "skill_arithmetic",
       "examples": [
-        "what is [twenty five times six](math_expr)",
-        "what is [sixteen plus ten](math_expr)",
-        "what is [nine minus six](math_expr)",
-        "math [twenty five times six](math_expr)",
-        "math [sixteen plus ten](math_expr)",
-        "math [nine minus six](math_expr)",
-        "arithmetic [twenty five times six](math_expr)",
-        "arithmetic [sixteen plus ten](math_expr)",
-        "arithmetic [nine minus six](math_expr)",
-        "calculate [twenty five times six](math_expr)",
-        "calculate [sixteen plus ten](math_expr)",
-        "calculate [nine minus six](math_expr)"
+        "what is nine minus six",
+        "math nine minus six",
+        "arithmetic nine minus six",
+        "calculate nine minus six"
+      ]
+    },
+    {
+      "regex": "math_expr",
+      "examples": [
+        ".*"
       ]
     },
     {
       "intent": "skill_schedule_add",
       "examples": [
-        "remind me to [smoke weed](schedule_task) at [five am](time)",
-        "remind me to [wake up for school](schedule_task) at [ten am](time)",
-        "remind me to [take a shit](schedule_task) by [twelve pm](time)",
-        "remind me to [sleep](schedule_task) by [five](time)",
-        "remind me to [go for a jog](schedule_task) at [six pm](time)",
-        "remind me to [stop](schedule_task) in an [hour](time)",
-        "remind me to [drink water](schedule_task) in an [minute](time)",
-        "remind me to [jump off my roof](schedule_task) in a [second](time)",
-        "remind me to [pick up ten cups](schedule_task) in [one hour](time)",
-        "remind me to [clone nineteen sheep](schedule_task) in [sixty hours](time)",
-        "remind me to [sleep](schedule_task) in [forty eight hours](time)",
-        "remind me to [go to sleep](schedule_task) in [forty eight hours](time)",
-        "remind me to [call my mother](schedule_task) in [twenty five minutes](time)",
-        "remind me to [drink](schedule_task) in [ten minutes](time)",
-        "remind me to [swim](schedule_task) in [ten minutes](time)",
-        "remind me to [do a thing](schedule_task) in [fifteen minutes](time)",
-        "remind me to [do my homework](schedule_task) in [thirty two seconds](time)"
+        "remind me to smoke weed at five am",
+        "remind me to take a shit by twelve pm",
+        "remind me to stop] in an hour",
+        "remind me to jump off my roof, then call some people in a second",
+        "remind me to go to sleep immediately in forty eight hours twelve minutes and seventy seconds",
+        "remind me to do a thing and then another thing, with more things in fifteen minutes and thirty nine seconds",
+        "remind me to sleep] in twenty five seconds and ten minutes",
+        "remind me to wear my socks in thirty nine minutes and three days",
+        "remind me to die in ten minutes"
+      ]
+    },
+    {
+      "regex": "time",
+      "examples": [
+        ".*"
       ]
     },
     {
       "intent": "skill_web_search",
       "examples": [
-        "look up [men in suits](web_search)",
-        "google [balls in your jaw video](web_search)",
-        "search for [math answers](web_search)"
+        "look up men in suits",
+        "google balls in your jaw video",
+        "search for math answers"
       ]
     },
     {
       "intent": "skill_self_say",
       "examples": [
-        "say [wakanda forever](speech_text)",
-        "speak [sea shells and shit](speech_text)",
-        "say [can i put this in your mouth](speech_text)",
-        "speak [when can i become human](speech_text)"
+        "say wakanda forever",
+        "speak sea shells and shit",
+        "say can i put this in your mouth",
+        "speak when can i become human"
       ]
     },
     {

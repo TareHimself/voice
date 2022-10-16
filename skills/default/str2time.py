@@ -1,9 +1,9 @@
 import re
 from datetime import datetime, tzinfo, timedelta
-from num_wrd import wrd2num
+from numwrd import wrd2num
 
 STRING_TO_TIME_EXPR_1 = r"(tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)?\s?(?:at|by)\s?([a-z]+)\s?([a-z]{3,}\s[a-z]{3,}|[a-z]{3,})?\s?(pm|am)?"
-STRING_TO_TIME_EXPR_2 = r"(?:in (?:an? )?)(?:([a-z]+|[a-z]+\s[a-z]+)?\s?(days?|hours?|minutes?|seconds?))?(?:(?:[\s,]+)?(?:and)?(?:[\s,]+)?)?(?:([a-z]+|[a-z]+\s[a-z]+)?\s?(days?|hours?|minutes?|seconds?))?(?:(?:[\s,]+)?(?:and)?(?:[\s,]+)?)?(?:([a-z]+|[a-z]+\s[a-z]+)?\s?(days?|hours?|minutes?|seconds?))?(?:(?:[\s,]+)?(?:and)?(?:[\s,]+)?)?(?:([a-z]+|[a-z]+\s[a-z]+)?\s?(days?|hours?|minutes?|seconds?))?"
+STRING_TO_TIME_EXPR_2 = r"(?:in (?:an? )?)?(?:([a-z]+|[a-z]+\s[a-z]+)?\s?(days?|hours?|minutes?|seconds?))?(?:(?:[\s,]+)?(?:and)?(?:[\s,]+)?)?(?:([a-z]+|[a-z]+\s[a-z]+)?\s?(days?|hours?|minutes?|seconds?))?(?:(?:[\s,]+)?(?:and)?(?:[\s,]+)?)?(?:([a-z]+|[a-z]+\s[a-z]+)?\s?(days?|hours?|minutes?|seconds?))?(?:(?:[\s,]+)?(?:and)?(?:[\s,]+)?)?(?:([a-z]+|[a-z]+\s[a-z]+)?\s?(days?|hours?|minutes?|seconds?))?"
 
 
 def stringToTime(text: str, tz: tzinfo = None):
@@ -17,10 +17,7 @@ def stringToTime(text: str, tz: tzinfo = None):
         print(day, hour, minute, am_pm)
 
         start = datetime.now(tz=tz)
-
-        #datetime.
-        datetime.today().weekday()
-        print(datetime.today().isoweekday())
+        return None
 
     else:
         start = datetime.now(tz=tz)

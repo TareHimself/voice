@@ -4,5 +4,5 @@
 /.rasa/
 /data/config.json
 __pycache__
-spotify_auth.json
 data
+node_modules

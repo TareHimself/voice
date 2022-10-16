@@ -95,35 +95,33 @@ def SpotifySkillValidation(f):
     return inner
 
 
-@Skill("skill_spotify_pause")
+@Skill(["skill_spotify_pause"])
 @SpotifySkillValidation
-async def Pause(phrase, entities):
+async def Pause(phrase, args):
     requests.put(url="https://api.spotify.com/v1/me/player/pause", headers=header_data)
 
 
-@Skill("skill_spotify_resume")
+@Skill(["skill_spotify_resume"])
 @SpotifySkillValidation
-async def Resume(phrase, entities):
+async def Resume(phrase, args):
     requests.put(url="https://api.spotify.com/v1/me/player/play", headers=header_data)
 
 
-@Skill("skill_spotify_skip")
+@Skill(["skill_spotify_skip"])
 @SpotifySkillValidation
-async def Skip(phrase, entities):
+async def Skip(phrase, args):
     requests.post(url="https://api.spotify.com/v1/me/player/next", headers=header_data)
 
 
-@Skill("skill_spotify_play", "skill_spotify_play_specific")
+@Skill(["skill_spotify_play"],r"(?:play)(?:\s(album|track|playlist))?\s(.*)")
 @SpotifySkillValidation
-async def Play(phrase, entities):
+async def Play(phrase, args):
     type_to_play = "track"
-    item_name = entities['music_query']
+    item_name = args[1]
 
+    if args[0]:
+        type_to_play = args[0].lower()
 
-    if 'type' in entities.keys():
-        type_to_play = entities['type']
-
-    print('entities',entities)
     result = requests.get(url="https://api.spotify.com/v1/search", headers=header_data, params={
         "q": item_name,
         "type": [type_to_play]
@@ -145,11 +143,11 @@ async def Play(phrase, entities):
         DisplayUiMessage("Playing {}".format(result[query]['items'][0]['name']))
 
 
-@Skill("skill_spotify_add")
+@Skill(["skill_spotify_add"],r"(?:add|queue)\s(.*)")
 @SpotifySkillValidation
-async def AddToQueue(phrase, entities):
+async def AddToQueue(phrase, args):
     result = requests.get(url="https://api.spotify.com/v1/search", headers=header_data, params={
-        "q": entities[0],
+        "q": args[0],
         "type": ['track']
     }).json()
 
@@ -160,11 +158,11 @@ async def AddToQueue(phrase, entities):
         DisplayUiMessage("Queued {}".format(result['tracks']['items'][0]['name']))
 
 
-@Skill("skill_spotify_volume")
+@Skill(["skill_spotify_volume"],r"(?:music volume|volume music)(?:\s(album|track|playlist))?\s([a-z\s]+?)(?:\s(?:percent$)|$)")
 @SpotifySkillValidation
-async def ModifyVolume(phrase, entities):
+async def ModifyVolume(phrase, args):
     try:
-        volume = int(w2n.word_to_num(entities[0].strip()))
+        volume = int(w2n.word_to_num(args[0].strip()))
 
         if volume < 0 or volume > 100:
             raise Exception('Volume must be a number between 0 and 100 inclusive')

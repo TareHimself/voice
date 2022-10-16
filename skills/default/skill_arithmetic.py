@@ -39,9 +39,9 @@ def ParseStringToMath(expr):
         return ''
 
 
-@Skill("skill_arithmetic")
-async def DoMath(phrase, entities):
-    result = ParseStringToMath(entities[0])
+@Skill(["skill_arithmetic"],r"(?:(?:math|calculate|arithmetic|what is)\s?)?(.*)")
+async def DoMath(phrase, args):
+    result = ParseStringToMath(args[0])
     if len(result):
         TextToSpeech("The answer is {}".format(str(eval(result))))
     else:

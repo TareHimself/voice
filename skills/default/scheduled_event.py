@@ -1,11 +1,12 @@
 import asyncio
 import datetime
 import time
-from notifypy.notify import Notify
+from core.notifications import SendNotification
 from datetime import datetime
 from pytz import timezone
-from core.events import ThreadEmitter,global_emitter
+from core.events import ThreadEmitter
 tz = timezone("US/Eastern")
+
 
 class ScheduledEvent(ThreadEmitter):
 
@@ -16,14 +17,10 @@ class ScheduledEvent(ThreadEmitter):
 
     async def runAsync(self):
         print("starting timer for event: ", self.event['msg'])
-        print(self.event['end_at'],datetime.now(tz))
+        print(self.event['end_at'], datetime.now(tz))
         time.sleep((self.event['end_at'] - datetime.now(tz)).total_seconds())
 
-        notification = Notify()
-        notification.application_name = "Voice Assistant"
-        notification.title = "Reminder"
-        notification.message = self.event['msg']
-        notification.send()
-    
+        SendNotification("Reminder", self.event['msg'])
+
     def run(self):
         asyncio.run(self.runAsync())

@@ -21,6 +21,7 @@ def TextToSpeech(msg):
 
 
 def DisplayUiMessage(msg):
+    print(msg)
     global_emitter.emit('send_speech_text', msg, True)
 
 
@@ -48,7 +49,6 @@ def GetFollowUp(timeout=0):
             loop.call_soon_threadsafe(task_return.set_result, msg)
             global_emitter.emit('stop_follow_up')
             status = 1
-
 
     def OnTimeout():
         nonlocal status
@@ -80,8 +80,7 @@ def DownloadFile(url: str, OnProgress: Callable[[int, int], None] = lambda t, p:
     return f
 
 
-
-async def GetFileHash(dir:str,block_size=65536):
+async def GetFileHash(dir: str, block_size=65536):
     loop = asyncio.get_event_loop()
     task_return = asyncio.Future()
     file_hash = hashlib.sha256()
@@ -93,12 +92,10 @@ async def GetFileHash(dir:str,block_size=65536):
                 loop.call_soon_threadsafe(file_hash.update, fb)
                 (fb)
                 fb = f.read(block_size)
-            loop.call_soon_threadsafe(task_return.set_result,file_hash)
-    
-    Thread(daemon=True,target=HashThread,group=None).start()
-    
+            loop.call_soon_threadsafe(task_return.set_result, file_hash)
+
+    Thread(daemon=True, target=HashThread, group=None).start()
+
     result = await task_return
 
     return result
-    
-

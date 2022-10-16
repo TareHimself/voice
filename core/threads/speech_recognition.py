@@ -63,11 +63,11 @@ class SpeechRecognitionThread(ThreadEmitter):
 
     def OnInputFromUser(self, msg):
         if callable(self.callback):
-            self.callback(msg, True,True)
+            self.callback(msg, True, True)
 
     def run(self):
         global_emitter.on('user_input', self.OnInputFromUser)
-        
+
         if SHOULD_USE_INPUT:
             i = InputThread()
             i.start()
@@ -96,7 +96,8 @@ class SpeechRecognitionThread(ThreadEmitter):
                         z.extractall(getcwd())
                         z.close()
                         result.close()
-                        os.rename(path.join(getcwd(), dir_name), path.join(getcwd(), STT_PATH))
+                        os.rename(path.join(getcwd(), dir_name),
+                                  path.join(getcwd(), STT_PATH))
                         model_downloaded = True
                         model_downloading = False
                 else:
@@ -104,14 +105,15 @@ class SpeechRecognitionThread(ThreadEmitter):
 
             self.model = Model(model_path=path.join(getcwd(), STT_PATH))
             self.rec = KaldiRecognizer(self.model, self.samplerate_in)
-            self.mic = StartVoice(callback=self.OnVoiceChunk, chunk=8000, samplerate_in=self.samplerate_in,
-                                  samplerate_out=self.samplerate_in, is_fft=False)
+            self.mic = StartVoice(callback=self.OnVoiceChunk,
+                                  chunk=8000, samplerate=self.samplerate_in)
 
         if callable(self.onStart):
             self.onStart()
 
 
 def StartSpeechRecognition(onVoiceData: Callable[[str, bool], None], onStart: Callable[[], None], samplerate_in=44100):
-    speech_recognition = SpeechRecognitionThread(callback=onVoiceData, onStart=onStart, samplerate_in=samplerate_in)
+    speech_recognition = SpeechRecognitionThread(
+        callback=onVoiceData, onStart=onStart, samplerate_in=samplerate_in)
     speech_recognition.start()
     return speech_recognition
