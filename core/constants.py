@@ -1,5 +1,6 @@
 import json
 from os import path, getcwd, mkdir
+from pytz import timezone as tz
 import wx
 
 SECRETS_PATH = path.join(getcwd(), '../secrets.json')
@@ -19,8 +20,8 @@ VOSK_MODEL_URL = "https://alphacephei.com/vosk/models/vosk-model-en-us-daanzu-20
 main_window_name = "Voice"
 
 if not path.exists(CONFIG_PATH):
-    with open(CONFIG_PATH,'w') as outf:
-        json.dump({},outf,indent=4)
+    with open(CONFIG_PATH, 'w') as outf:
+        json.dump({}, outf, indent=4)
 
 config = {}
 with open(CONFIG_PATH, "r") as infile:
@@ -32,6 +33,7 @@ class DynamicData:
         self.wake_word = "alice"
         self.wx_color_darkgrey = wx.Colour(31, 31, 31)
         self.wx_visualizer_band_color = wx.Colour(255, 255, 255)
+        self.timezone = tz("US/Eastern")
 
 
 dynamic = DynamicData()

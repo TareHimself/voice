@@ -1,6 +1,6 @@
 import re
 from datetime import datetime, tzinfo, timedelta
-from numwrd import wrd2num
+from core.numwrd import wrd2num
 
 STRING_TO_TIME_EXPR_1 = r"(tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)?\s?(?:at|by)\s?([a-z]+)\s?([a-z]{3,}\s[a-z]{3,}|[a-z]{3,})?\s?(pm|am)?"
 STRING_TO_TIME_EXPR_2 = r"(?:in (?:an? )?)?(?:([a-z]+|[a-z]+\s[a-z]+)?\s?(days?|hours?|minutes?|seconds?))?(?:(?:[\s,]+)?(?:and)?(?:[\s,]+)?)?(?:([a-z]+|[a-z]+\s[a-z]+)?\s?(days?|hours?|minutes?|seconds?))?(?:(?:[\s,]+)?(?:and)?(?:[\s,]+)?)?(?:([a-z]+|[a-z]+\s[a-z]+)?\s?(days?|hours?|minutes?|seconds?))?(?:(?:[\s,]+)?(?:and)?(?:[\s,]+)?)?(?:([a-z]+|[a-z]+\s[a-z]+)?\s?(days?|hours?|minutes?|seconds?))?"

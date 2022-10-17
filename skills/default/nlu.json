@@ -103,6 +103,15 @@
       ]
     },
     {
+      "intent": "skill_schedule_list",
+      "examples": [
+        "what do i have on my schedule",
+        "list my schedule",
+        "read me my schedule",
+        "what is on my schedule for today"
+      ]
+    },
+    {
       "regex": "time",
       "examples": [
         ".*"
@@ -163,6 +172,14 @@
         "Yes",
         "sure",
         "ok"
+      ]
+    },
+    {
+      "intent": "skill_reject",
+      "examples": [
+        "no",
+        "nevermind",
+        "dont worry"
       ]
     }
   ]

@@ -1,10 +1,9 @@
 import base64
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta
 import json
 import webbrowser
 import requests
-from word2number import w2n
-from num2words import num2words
+from core.numwrd import num2wrd, wrd2num
 from core.skills import Skill
 from core.constants import config, DATA_PATH
 from urllib.parse import urlencode
@@ -29,11 +28,12 @@ def UpdateHeader(auth):
 
 
 def OnSpotifyAuthReceived(auth):
-    if 'expires_in' in auth.keys(): 
+    if 'expires_in' in auth.keys():
         global spotify_auth
         global spotify_auth_refresh
         spotify_auth = auth
-        spotify_auth_refresh = datetime.utcnow() + timedelta(seconds=spotify_auth['expires_in'])
+        spotify_auth_refresh = datetime.utcnow(
+        ) + timedelta(seconds=spotify_auth['expires_in'])
         spotify_auth['expires_at'] = spotify_auth_refresh.isoformat()
         del spotify_auth['expires_in']
         UpdateHeader(auth)
@@ -46,7 +46,7 @@ def ValidateSpotifyAuth():
     global spotify_auth_refresh
     if not spotify_auth_refresh or 'spotify' not in config.keys():
         return False
-    
+
     utc_now = datetime.utcnow()
     if spotify_auth_refresh < utc_now:
         payload = {
@@ -55,12 +55,15 @@ def ValidateSpotifyAuth():
             "client_id": config['spotify']['client_id']
         }
 
-        auth_code = config['spotify']['client_id'] + ':' + config['spotify']['client_secret']
+        auth_code = config['spotify']['client_id'] + \
+            ':' + config['spotify']['client_secret']
         headers = {"Authorization": "Basic " + base64.urlsafe_b64encode(auth_code.encode('ascii')).decode('ascii'),
                    'Content-Type': 'application/x-www-form-urlencoded'}
         url = "https://accounts.spotify.com/api/token"
-        auth_data = requests.post(url=url, headers=headers, data=payload).json()
-        spotify_auth_refresh = utc_now + timedelta(seconds=auth_data['expires_in'])
+        auth_data = requests.post(
+            url=url, headers=headers, data=payload).json()
+        spotify_auth_refresh = utc_now + \
+            timedelta(seconds=auth_data['expires_in'])
         spotify_auth['access_token'] = auth_data['access_token']
         spotify_auth['expires_at'] = spotify_auth_refresh.isoformat()
         UpdateHeader(spotify_auth)
@@ -81,7 +84,8 @@ if not spotify_auth:
     else:
         with open(SPOTIFY_AUTH_PATH, "r") as infile:
             spotify_auth = json.load(infile)
-            spotify_auth_refresh = datetime.fromisoformat(spotify_auth['expires_at'])
+            spotify_auth_refresh = datetime.fromisoformat(
+                spotify_auth['expires_at'])
             ValidateSpotifyAuth()
             UpdateHeader(spotify_auth)
 
@@ -98,22 +102,25 @@ def SpotifySkillValidation(f):
 @Skill(["skill_spotify_pause"])
 @SpotifySkillValidation
 async def Pause(phrase, args):
-    requests.put(url="https://api.spotify.com/v1/me/player/pause", headers=header_data)
+    requests.put(url="https://api.spotify.com/v1/me/player/pause",
+                 headers=header_data)
 
 
 @Skill(["skill_spotify_resume"])
 @SpotifySkillValidation
 async def Resume(phrase, args):
-    requests.put(url="https://api.spotify.com/v1/me/player/play", headers=header_data)
+    requests.put(url="https://api.spotify.com/v1/me/player/play",
+                 headers=header_data)
 
 
 @Skill(["skill_spotify_skip"])
 @SpotifySkillValidation
 async def Skip(phrase, args):
-    requests.post(url="https://api.spotify.com/v1/me/player/next", headers=header_data)
+    requests.post(url="https://api.spotify.com/v1/me/player/next",
+                  headers=header_data)
 
 
-@Skill(["skill_spotify_play"],r"(?:play)(?:\s(album|track|playlist))?\s(.*)")
+@Skill(["skill_spotify_play"], r"(?:play)(?:\s(album|track|playlist))?\s(.*)")
 @SpotifySkillValidation
 async def Play(phrase, args):
     type_to_play = "track"
@@ -140,10 +147,11 @@ async def Play(phrase, args):
                 'offset': {'position': 0}
             })
 
-        DisplayUiMessage("Playing {}".format(result[query]['items'][0]['name']))
+        DisplayUiMessage("Playing {}".format(
+            result[query]['items'][0]['name']))
 
 
-@Skill(["skill_spotify_add"],r"(?:add|queue)\s(.*)")
+@Skill(["skill_spotify_add"], r"(?:add|queue)\s(.*)")
 @SpotifySkillValidation
 async def AddToQueue(phrase, args):
     result = requests.get(url="https://api.spotify.com/v1/search", headers=header_data, params={
@@ -153,24 +161,25 @@ async def AddToQueue(phrase, args):
 
     if result['tracks'] and len(result['tracks']['items']) > 0:
         requests.post(
-            url="https://api.spotify.com/v1/me/player/queue?uri={}".format(result['tracks']['items'][0]['uri']),
+            url="https://api.spotify.com/v1/me/player/queue?uri={}".format(
+                result['tracks']['items'][0]['uri']),
             headers=header_data)
-        DisplayUiMessage("Queued {}".format(result['tracks']['items'][0]['name']))
+        DisplayUiMessage("Queued {}".format(
+            result['tracks']['items'][0]['name']))
 
 
-@Skill(["skill_spotify_volume"],r"(?:music volume|volume music)(?:\s(album|track|playlist))?\s([a-z\s]+?)(?:\s(?:percent$)|$)")
+@Skill(["skill_spotify_volume"], r"(?:music volume|volume music)\s([a-z\s]+?)(?:\s(?:percent$)|$)")
 @SpotifySkillValidation
 async def ModifyVolume(phrase, args):
-    try:
-        volume = int(w2n.word_to_num(args[0].strip()))
+    volume = int(wrd2num(args[0]))
 
-        if volume < 0 or volume > 100:
-            raise Exception('Volume must be a number between 0 and 100 inclusive')
+    if volume < 0 or volume > 100:
+        raise Exception(
+            'Volume must be a number between 0 and 100 inclusive')
 
-        requests.put(
-            url="https://api.spotify.com/v1/me/player/volume?volume_percent={}".format(volume),
-            headers=header_data)
-        TextToSpeech('Set music volume to {}, Percent.'.format(num2words(volume)))
-    except Exception as e:
-        print(e)
-        pass
+    requests.put(
+        url="https://api.spotify.com/v1/me/player/volume?volume_percent={}".format(
+            volume),
+        headers=header_data)
+    TextToSpeech(
+        'Set music volume to {} Percent.'.format(num2wrd(volume)))

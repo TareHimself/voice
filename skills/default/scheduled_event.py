@@ -3,9 +3,8 @@ import datetime
 import time
 from core.notifications import SendNotification
 from datetime import datetime
-from pytz import timezone
 from core.events import ThreadEmitter
-tz = timezone("US/Eastern")
+from core.constants import dynamic as data
 
 
 class ScheduledEvent(ThreadEmitter):
@@ -16,9 +15,9 @@ class ScheduledEvent(ThreadEmitter):
         self.start()
 
     async def runAsync(self):
-        print("starting timer for event: ", self.event['msg'])
-        print(self.event['end_at'], datetime.now(tz))
-        time.sleep((self.event['end_at'] - datetime.now(tz)).total_seconds())
+        self.id = self.event['id']
+        time.sleep((self.event['end_at'] -
+                   datetime.now(data.timezone)).total_seconds())
 
         SendNotification("Reminder", self.event['msg'])
 

@@ -1,3 +1,4 @@
 import sqlite3
-
-connection = sqlite3.connect("persistent.db")
+from core.constants import DATA_PATH
+from os import path
+db = sqlite3.connect(path.join(DATA_PATH, "persistent.db"))

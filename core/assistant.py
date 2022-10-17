@@ -97,8 +97,8 @@ class Assistant:
         self.StopWaitFollowUp()
         self.is_processing_command = False
 
-    def DoSpeech(self, message):
-        self.speaker.AddJob('speaker_tts', message)
+    def DoSpeech(self, message, callback):
+        self.speaker.AddJob('speaker_tts', message, callback)
 
     def OnVoiceProcessed(self, phrase: str, is_complete: bool, assumeIsCommand=False):
         if not self.is_processing_command:

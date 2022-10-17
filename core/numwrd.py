@@ -123,13 +123,16 @@ def num2wrd(num: int):
             num_position = len(section) - 1 - x
 
             if num_position == 2 and num_current != "0":
-                section_result = section_result + num_to_words[num_current] + " hundred "
+                section_result = section_result + \
+                    num_to_words[num_current] + " hundred "
             elif num_position == 1 and num_current != "0":
                 if num_current == "1" and section[x + 1] != "0":
-                    section_result = section_result + num_to_words[num_current + section[x + 1]] + " "
+                    section_result = section_result + \
+                        num_to_words[num_current + section[x + 1]] + " "
                     break
                 else:
-                    section_result = section_result + num_to_words[num_current + "0"] + " "
+                    section_result = section_result + \
+                        num_to_words[num_current + "0"] + " "
             elif num_position == 0 and num_current != "0":
                 section_result = section_result + num_to_words[num_current]
 

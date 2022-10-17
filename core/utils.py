@@ -5,7 +5,7 @@ from io import BytesIO
 import aiohttp
 import requests
 from threading import Thread
-from typing import Callable
+from typing import Callable, Union
 from core.events import global_emitter
 from core.threads import StartTimer, StopTimer
 
@@ -13,11 +13,28 @@ from core.threads import StartTimer, StopTimer
 async def GetNluData(phrase):
     async with aiohttp.ClientSession() as session:
         async with session.get("http://localhost:8097/parse?q={}".format(phrase)) as resp:
-            return await resp.json()
+            nlu_response = await resp.json()
+            if len(nlu_response['error']):
+                return None
+
+            return [nlu_response['data']['intent']['name'], nlu_response['data']['intent']['confidence']]
 
 
-def TextToSpeech(msg):
-    global_emitter.emit('send_speech_voice', msg)
+def TextToSpeech(msg, waitForFinish=False) -> Union[None, asyncio.Future]:
+    if not waitForFinish:
+        global_emitter.emit('send_speech_voice', msg, None)
+        return
+
+    loop = asyncio.get_event_loop()
+    task_return = asyncio.Future()
+
+    def OnFinish():
+        nonlocal task_return
+        loop.call_soon_threadsafe(task_return.set_result, None)
+
+    global_emitter.emit('send_speech_voice', msg, OnFinish)
+
+    return task_return
 
 
 def DisplayUiMessage(msg):
@@ -33,7 +50,7 @@ def StartSkill():
     global_emitter.emit('send_skill_start')
 
 
-def GetFollowUp(timeout=0):
+def GetFollowUp(timeout_secs=0):
     loop = asyncio.get_event_loop()
     task_return = asyncio.Future()
     task_id = uuid.uuid1()
@@ -62,8 +79,8 @@ def GetFollowUp(timeout=0):
     global_emitter.on('follow_up', OnResultReceived)
 
     global_emitter.emit('start_follow_up')
-    if timeout > 0:
-        StartTimer(timer_id=task_id, length=timeout, callback=OnTimeout)
+    if timeout_secs > 0:
+        StartTimer(timer_id=task_id, length=timeout_secs, callback=OnTimeout)
 
     return task_return
 

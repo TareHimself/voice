@@ -4,10 +4,12 @@ import pyautogui
 import pyperclip as pc
 from os import system
 
+from core.utils import TextToSpeech
 
-@Skill(["skill_app_open"],r"(?:(?:close|open|quit|launch|exit)\s?)?(.*)")
+
+@Skill(["skill_app_open"], r"(?:(?:close|open|quit|launch|exit)\s?)?(.*)")
 async def LaunchApplication(phrase, args):
-    
+
     if platform.system().lower() == 'darwin':
         system('open -a {}.app'.format(args[0]))
     else:
@@ -16,7 +18,10 @@ async def LaunchApplication(phrase, args):
         pyautogui.hotkey('ctrl', 'v')
         pyautogui.press("enter")
 
+    TextToSpeech('Launching {}.'.format(args[0]))
 
-@Skill(["skill_app_close"],r"(?:(?:close|open|quit|launch|exit)\s?)?(.*)")
+
+@Skill(["skill_app_close"], r"(?:(?:close|open|quit|launch|exit)\s?)?(.*)")
 async def CloseApplication(phrase, args):
     system('taskkill /F /FI "WindowTitle eq {}" /T'.format(args[0]))
+    TextToSpeech('Closed {}.'.format(args[0]))
