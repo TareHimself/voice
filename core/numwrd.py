@@ -1,6 +1,7 @@
 import math
 
 words_to_num = {
+    "zero": 0,
     "one": 1,
     "two": 2,
     "three": 3,
@@ -31,6 +32,7 @@ words_to_num = {
 }
 
 num_to_words = {
+    "0": "zero",
     "1": "one",
     "2": "two",
     "3": "three",
@@ -103,14 +105,15 @@ def wrd2num(word: str):
 
 
 def num2wrd(num: int):
+    if num == 0:
+        return "zero"
     result = ''
     parts = []
     num_as_wrd = str(num)
 
     for i in range(math.ceil(len(num_as_wrd) / 3)):
-        parts.append(num_as_wrd[3*i:(3*i) + 3])
+        parts.insert(0, num_as_wrd[::-1][3*i:(3*i) + 3][::-1])
 
-    print(parts)
     for i in range(len(parts)):
         section = parts[i]
         section_result = ''
@@ -134,7 +137,8 @@ def num2wrd(num: int):
                     section_result = section_result + \
                         num_to_words[num_current + "0"] + " "
             elif num_position == 0 and num_current != "0":
-                section_result = section_result + num_to_words[num_current]
+                section_result = section_result + \
+                    num_to_words[num_current] + " "
 
         if section_result:
             section_result = section_result + suffix + " "

@@ -16,9 +16,9 @@ async function ProxyRequest(req) {
 	req.send(result.data)
 }
 
-proxyClient.on('get|assistant/*', ProxyRequest)
-proxyClient.on('post|assistant/*', ProxyRequest)
-proxyClient.on('put|assistant/*', ProxyRequest)
-proxyClient.on('delete|assistant/*', ProxyRequest)
+proxyClient.get('assistant/*', ProxyRequest)
+proxyClient.post('assistant/*', ProxyRequest)
+proxyClient.put('assistant/*', ProxyRequest)
+proxyClient.delete('assistant/*', ProxyRequest)
 
 proxyClient.connect()

@@ -23,4 +23,4 @@ def TimeToSttText(t: datetime):
         minute = num2wrd(int(minute))
 
     is_daytime = t.hour < 12
-    return "{}, {} {},".format(hour, minute, "ai em" if is_daytime else "pee em")
+    return "{} {} ,{}".format(hour, minute, "ai em" if is_daytime else "pee em")
