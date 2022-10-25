@@ -31,7 +31,7 @@ SetLogLevel(-1)
 model_downloaded = False
 model_downloading = False
 
-SHOULD_USE_INPUT = False
+SHOULD_USE_INPUT = True
 
 
 class SpeechRecognitionThread(ThreadEmitter):

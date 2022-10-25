@@ -1,8 +1,8 @@
 import asyncio
+import importlib
 import json
 from os import getcwd, listdir, path
 import sys
-from tempfile import tempdir
 from core.constants import DATA_PATH, dynamic, config
 from core.events import global_emitter
 from core.skills import TryRunCommand
@@ -12,6 +12,7 @@ from threading import Thread
 import asyncio
 import aiohttp
 import traceback
+from inspect import getmembers, isfunction
 
 LOOP_FOR_ASYNC = asyncio.new_event_loop()
 LATEST_HASH_PATH = path.join(DATA_PATH, 'nlu.sha')
@@ -31,20 +32,26 @@ nlu_combined = []
 
 async def TrainNlu():
 
-    for dir in listdir(SKILLS_PATH):
-        sys.path.insert(0, path.join(SKILLS_PATH, dir))
-        for file in listdir(path.join(SKILLS_PATH, dir)):
+    for skill_dir in listdir(SKILLS_PATH):
+        sys.path.insert(0, path.join(SKILLS_PATH, skill_dir))
+        for file in listdir(path.join(SKILLS_PATH, skill_dir)):
             if file.endswith('.json'):
-                with open(path.join(SKILLS_PATH, dir, file), 'r') as con_fig:
+                with open(path.join(SKILLS_PATH, skill_dir, file), 'r') as con_fig:
                     config_dict = json.load(con_fig)
                     nlu_combined.extend(config_dict['nlu'])
             elif file.endswith('.py') and file.startswith('skill_'):
-                with open(path.join(SKILLS_PATH, dir, file), 'r') as skill_f:
-                    try:
-                        exec(skill_f.read(), globals())
-                    except Exception as e:
-                        print('error while compiling', file)
-                        print(traceback.format_exc())
+                try:
+                    impored_module = importlib.import_module(file[:-3])
+                except Exception as e:
+                    print('error while compiling', file)
+                    print(traceback.format_exc())
+
+                # with open(path.join(SKILLS_PATH, dir, file), 'r') as skill_f:
+                #     try:
+                #         exec(skill_f.read(), globals())
+                #     except Exception as e:
+                #         print('error while compiling', file)
+                #         print(traceback.format_exc())
 
     current_hash = ""
 
@@ -54,7 +61,7 @@ async def TrainNlu():
 
     async with aiohttp.ClientSession() as session:
         data_to_send = {'version': '3.1', 'nlu': nlu_combined}
-        async with session.post("http://localhost:8097/train?h={}".format(current_hash), data=json.dumps(data_to_send)) as resp:
+        async with session.post("https://proxy.oyintare.dev/nlu/train?h={}".format(current_hash), data=json.dumps(data_to_send)) as resp:
             with open(LATEST_HASH_PATH, 'w') as l_hash_w:
                 data = await resp.json()
                 l_hash_w.write(data['data'])
@@ -122,6 +129,7 @@ class Assistant:
                     except Exception as e:
                         print(e)
                     self.waiting_for_command = False
+
 
     def OnVoiceStart(self):
         TextToSpeech("Speech Recognition Active.")

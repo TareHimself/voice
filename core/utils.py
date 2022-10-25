@@ -11,13 +11,18 @@ from core.threads import StartTimer, StopTimer
 
 
 async def GetNluData(phrase):
-    async with aiohttp.ClientSession() as session:
-        async with session.get("http://localhost:8097/parse?q={}".format(phrase)) as resp:
-            nlu_response = await resp.json()
-            if len(nlu_response['error']):
-                return None
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get("https://proxy.oyintare.dev/nlu/parse?q={}".format(phrase)) as resp:
+                nlu_response = await resp.json()
+                print(nlu_response)
+                if len(nlu_response['error']):
+                    return None
 
-            return [nlu_response['data']['intent']['name'], nlu_response['data']['intent']['confidence']]
+                return [nlu_response['data']['intent']['name'], nlu_response['data']['intent']['confidence']]
+    except aiohttp.ClientConnectorError as e:
+        print(e)
+        return None
 
 
 def TextToSpeech(msg, waitForFinish=False) -> Union[None, asyncio.Future]:
@@ -38,7 +43,7 @@ def TextToSpeech(msg, waitForFinish=False) -> Union[None, asyncio.Future]:
 
 
 def DisplayUiMessage(msg):
-    print(msg)
+    print(msg, end='\r')
     global_emitter.emit('send_speech_text', msg, True)
 
 

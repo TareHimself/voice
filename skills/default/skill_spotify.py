@@ -46,6 +46,21 @@ def ValidateSpotifyAuth():
     global spotify_auth_refresh
     if not spotify_auth_refresh or 'spotify' not in config.keys():
         return False
+    elif 'spotify' in config.keys():
+        if not path.exists(SPOTIFY_AUTH_PATH):
+            authorize_url = "https://accounts.spotify.com/authorize?response_type=code&" + urlencode(
+                {'client_id': config['spotify']['client_id'], 'scope': config['spotify']['scope'],
+                 'redirect_uri': config['spotify']['redirect_uri']})
+            new = 2  # not really necessary, may be default on most modern browsers
+            server.AddJob('add_spotify_callback', OnSpotifyAuthReceived)
+            webbrowser.open(authorize_url, new=new)
+        else:
+            with open(SPOTIFY_AUTH_PATH, "r") as infile:
+                spotify_auth = json.load(infile)
+                spotify_auth_refresh = datetime.fromisoformat(
+                    spotify_auth['expires_at'])
+                ValidateSpotifyAuth()
+                UpdateHeader(spotify_auth)
 
     utc_now = datetime.utcnow()
     if spotify_auth_refresh < utc_now:
@@ -71,24 +86,6 @@ def ValidateSpotifyAuth():
             json.dump(spotify_auth, outfile, indent=4)
 
     return True
-
-
-if not spotify_auth:
-    if not path.exists(SPOTIFY_AUTH_PATH):
-        authorize_url = "https://accounts.spotify.com/authorize?response_type=code&" + urlencode(
-            {'client_id': config['spotify']['client_id'], 'scope': config['spotify']['scope'],
-             'redirect_uri': config['spotify']['redirect_uri']})
-        new = 2  # not really necessary, may be default on most modern browsers
-        server.AddJob('add_spotify_callback', OnSpotifyAuthReceived)
-        webbrowser.open(authorize_url, new=new)
-    else:
-        with open(SPOTIFY_AUTH_PATH, "r") as infile:
-            spotify_auth = json.load(infile)
-            spotify_auth_refresh = datetime.fromisoformat(
-                spotify_auth['expires_at'])
-            ValidateSpotifyAuth()
-            UpdateHeader(spotify_auth)
-
 
 def SpotifySkillValidation(f):
     async def inner(*args, **kwargs):
