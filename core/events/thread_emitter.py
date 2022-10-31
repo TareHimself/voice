@@ -1,18 +1,15 @@
 import queue
-import threading
-from threading import Thread
+from .thread import CoreThread
 import uuid
 
 thread_queue = {}
 
-lock = threading.Lock()
-
 
 # Use 'use' instead of 'run'
-class ThreadEmitter(Thread):
+class ThreadEmitter(CoreThread):
 
     def __init__(self, use_blocking_queue=True, emitter_id=None):
-        super(ThreadEmitter, self).__init__(group=None, daemon=True)
+        super().__init__()
         self.id = emitter_id if emitter_id else uuid.uuid1()
         thread_queue[self.id] = queue.Queue()
 
@@ -26,12 +23,6 @@ class ThreadEmitter(Thread):
 
     def HandleJob(self, job: str, *args, **kwargs):
         pass
-
-    def AquireLock(self):
-        lock.acquire()
-
-    def ReleaseLock(self):
-        lock.release()
 
     def run(self):
         while True:

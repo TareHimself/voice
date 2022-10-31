@@ -6,7 +6,7 @@ authors = ["Tare Ebelo <75279482+TareHimself@users.noreply.github.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.10"
+python = ">=3.9,<3.10"
 wxPython = "^4.2.0"
 vosk = "^0.3.44"
 torch = "^1.12.1"

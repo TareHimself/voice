@@ -1,4 +1,4 @@
-from core.events import global_emitter, ThreadEmitter
+from core.events import gEmitter, ThreadEmitter
 
 
 class InputThread(ThreadEmitter):
@@ -7,7 +7,10 @@ class InputThread(ThreadEmitter):
         super(InputThread, self).__init__()
 
     def run(self):
-        while True:
-            user_input = input('assistant input: ')
-            if len(user_input.strip()) > 0:
-                global_emitter.emit('user_input', user_input)
+        try:
+            while True:
+                user_input = input('assistant input: ')
+                if len(user_input.strip()) > 0:
+                    gEmitter.emit('user_input', user_input)
+        except KeyboardInterrupt:
+            pass

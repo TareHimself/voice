@@ -4,7 +4,7 @@ import time
 from io import BytesIO
 from typing import Callable
 import numpy as np
-from core.events import global_emitter, ThreadEmitter
+from core.events import gEmitter, ThreadEmitter
 from .voice import StartVoice
 from scipy.fftpack import fft
 

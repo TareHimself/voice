@@ -1,23 +1,26 @@
 # V3
+import asyncio
 import base64
+from subprocess import Popen
+import sys
 from threading import Thread
-
 import aiohttp
 from core.events import ThreadEmitter
 from core.constants import config
-# Built-in library
-import json
 from uuid import uuid4
 # Third-party library
 from aiohttp import web
-import json
+
+from core.singletons import GetSingleton, Singleton
+from core.threads.timer import StartTimer
+from core.events import gEmitter
 
 
 def CreateProxiedBody(body):
     return web.json_response({"body": body})
 
 
-class WebServer:
+class WebServer():
     def __init__(self):
         self.app = web.Application()
 
@@ -63,12 +66,17 @@ class WebServer:
 class ServerThread(ThreadEmitter):
 
     def __init__(self):
-        super(ServerThread, self).__init__()
+        super().__init__()
         self.spotify_callbacks = []
+        self.WebServer = None
 
     def HandleJob(self, job: str, *args, **kwargs):
-        print(job)
-        if job == 'add_spotify_callback':
+        self.print(job)
+        if job == 'end':
+            asyncio.run(self.WebServer.app.shutdown())
+            asyncio.run(self.WebServer.app.cleanup())
+            print('STOPPED SERVER')
+        elif job == 'add_spotify_callback':
             self.spotify_callbacks.append(args[0])
 
     def ProcessJobThreadFunc(self):
@@ -76,9 +84,9 @@ class ServerThread(ThreadEmitter):
             self.ProcessJobs()
 
     def run(self):
-        app = WebServer()
+        self.WebServer = WebServer()
 
-        @app.Get("/spotify")
+        @self.WebServer.Get("/spotify")
         async def OnSpotifyAuth(request: web.Request):
             code = request.rel_url.query['code']
             url = "https://accounts.spotify.com/api/token"
@@ -90,7 +98,7 @@ class ServerThread(ThreadEmitter):
             }
 
             auth_code = config['spotify']['client_id'] + \
-                        ':' + config['spotify']['client_secret']
+                ':' + config['spotify']['client_secret']
             headers = {
                 "Authorization": "Basic " + base64.urlsafe_b64encode((auth_code).encode('ascii')).decode('ascii'),
                 'Content-Type': 'application/x-www-form-urlencoded'}
@@ -104,12 +112,17 @@ class ServerThread(ThreadEmitter):
 
             return CreateProxiedBody("Done")
 
-        @app.Post("/telegram/webhook")
+        @self.WebServer.Post("/telegram/webhook")
         async def OnTelegramUpdate(request: web.Request):
 
-            return CreateProxiedBody({"ok": True})
+            return web.json_response({"status": 200})
 
-        @app.Get("/")
+        @self.WebServer.Get("/telegram/webhook")
+        async def OnTelegramGet(request: web.Request):
+
+            return web.json_response({"status": 200})
+
+        @self.WebServer.Get("/")
         async def OnHome(request: web.Request):
 
             return CreateProxiedBody("THIS IS A VOICE ASSISTANT BOI")
@@ -117,11 +130,37 @@ class ServerThread(ThreadEmitter):
         server_job_processor = Thread(
             target=self.ProcessJobThreadFunc, daemon=True, group=None)
         server_job_processor.start()
-        app.listen('localhost', 24559)
+        self.WebServer.listen('localhost', 24559)
 
 
-server = ServerThread()
+def _start_proxy():
+    proxy_process = Popen(['npm', 'start'], stdout=sys.stdout,
+                          stderr=sys.stderr, shell=True)
+
+    def end_process(sig, frame):
+        #Popen("TASKKILL /F /PID {pid} /T".format(pid=proxy_process.pid))
+        proxy_process.terminate()
+
+    gEmitter.on('terminate', end_process)
+
+    proxy_process.communicate()
+
+
+def RunProxy():
+    Thread(daemon=True, target=_start_proxy, group=None).start()
+
+
+class ServerSingleton(Singleton):
+    def __init__(self):
+        super().__init__(id="server")
+        self.server = ServerThread()
+        self.server.start()
+        RunProxy()
+
+
+def OnStopServer():
+    server_singleton: ServerSingleton = GetSingleton('server')
 
 
 def StartServer():
-    server.start()
+    ServerSingleton()

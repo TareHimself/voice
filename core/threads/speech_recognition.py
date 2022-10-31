@@ -8,7 +8,7 @@ import requests
 from vosk import Model, KaldiRecognizer, SetLogLevel
 from os import getcwd, path
 from core.constants import VOSK_MODEL_URL, STT_PATH
-from core.events import global_emitter, ThreadEmitter
+from core.events import gEmitter, ThreadEmitter
 from .voice import StartVoice
 from .collect_input import InputThread
 from zipfile import ZipFile
@@ -31,12 +31,12 @@ SetLogLevel(-1)
 model_downloaded = False
 model_downloading = False
 
-SHOULD_USE_INPUT = True
+SHOULD_USE_INPUT = False
 
 
 class SpeechRecognitionThread(ThreadEmitter):
 
-    def __init__(self, callback=0, onStart=0, samplerate_in=44100):
+    def __init__(self, callback=0, onStart=0, samplerate_in=16000):
         super(SpeechRecognitionThread, self).__init__()
         self.samplerate_in = samplerate_in
         self.callback = callback
@@ -66,7 +66,7 @@ class SpeechRecognitionThread(ThreadEmitter):
             self.callback(msg, True, True)
 
     def run(self):
-        global_emitter.on('user_input', self.OnInputFromUser)
+        gEmitter.on('user_input', self.OnInputFromUser)
 
         if SHOULD_USE_INPUT:
             i = InputThread()

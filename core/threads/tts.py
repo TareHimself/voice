@@ -16,7 +16,7 @@ INPUT_DEVICE = None  # 4
 class TTSThread(ThreadEmitter):
 
     def __init__(self):
-        super(TTSThread, self).__init__()
+        super().__init__()
         self.model = None
 
     def DoTTS(self, text, callback):

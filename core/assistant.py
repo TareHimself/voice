@@ -4,7 +4,8 @@ import json
 from os import getcwd, listdir, path
 import sys
 from core.constants import DATA_PATH, dynamic, config
-from core.events import global_emitter
+from core.events import gEmitter
+from core.singletons import Singleton
 from core.skills import TryRunCommand
 from core.threads import StartSpeechRecognition, StartTTS
 from core.utils import TextToSpeech, DisplayUiMessage, GetFileHash
@@ -12,7 +13,6 @@ from threading import Thread
 import asyncio
 import aiohttp
 import traceback
-from inspect import getmembers, isfunction
 
 LOOP_FOR_ASYNC = asyncio.new_event_loop()
 LATEST_HASH_PATH = path.join(DATA_PATH, 'nlu.sha')
@@ -74,19 +74,20 @@ def callTrain():
 Thread(daemon=True, target=callTrain, group=None).start()
 
 
-class Assistant:
+class Assistant(Singleton):
 
     def __init__(self):
+        super().__init__(id='assistant')
         self.model_is_ready = False
         self.is_processing_command = False
         self.speaker = StartTTS()
         self.waiting_for_command = False
         self.is_following_up = False
-        global_emitter.on('send_speech_voice', self.DoSpeech)
-        global_emitter.on('start_follow_up', self.StartWaitFollowUp)
-        global_emitter.on('stop_follow_up', self.StopWaitFollowUp)
-        global_emitter.on('send_skill_start', self.OnSkillStart)
-        global_emitter.on('send_skill_end', self.OnSkillEnd)
+        gEmitter.on('send_speech_voice', self.DoSpeech)
+        gEmitter.on('start_follow_up', self.StartWaitFollowUp)
+        gEmitter.on('stop_follow_up', self.StopWaitFollowUp)
+        gEmitter.on('send_skill_start', self.OnSkillStart)
+        gEmitter.on('send_skill_end', self.OnSkillEnd)
         self.speech_recognition = StartSpeechRecognition(
             onVoiceData=self.OnVoiceProcessed, onStart=self.OnVoiceStart)
 
@@ -111,7 +112,7 @@ class Assistant:
         if not self.is_processing_command:
             DisplayUiMessage(phrase)
         if self.is_following_up and is_complete:
-            global_emitter.emit('follow_up', phrase)
+            gEmitter.emit('follow_up', phrase)
         if not self.is_processing_command and not self.is_following_up:
             if is_complete and (phrase.lower().strip().startswith(dynamic.wake_word) or assumeIsCommand) and not self.waiting_for_command:
                 if len(phrase.lower()[len(dynamic.wake_word):].strip()) > 0:
@@ -129,7 +130,6 @@ class Assistant:
                     except Exception as e:
                         print(e)
                     self.waiting_for_command = False
-
 
     def OnVoiceStart(self):
         TextToSpeech("Speech Recognition Active.")

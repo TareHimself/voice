@@ -1,7 +1,7 @@
 import numpy as np
 from wx.html2 import WebView as WV
 from core.constants import dynamic
-from core.events import global_emitter
+from core.events import gEmitter
 from core.threads import StartFFT
 
 SMOOTHING_RATE = 7

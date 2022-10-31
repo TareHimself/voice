@@ -5,7 +5,7 @@ const axios = require("axios")
 const proxyClient = new Client('wss://proxy.oyintare.dev/')
 
 async function ProxyRequest(req) {
-	console.log(req.body,req.headers)
+	console.log(req.body)
 	try {
 		const result = await axios({
 			method: req.method.toLowerCase(),
@@ -14,19 +14,18 @@ async function ProxyRequest(req) {
 			headers: req.headers,
 			validateStatus: () => true,
 		})
-
 		req.send(result.data)
 	}
-	catch(err) {
+	catch (err) {
 		console.log(err.message)
 		req.sendStatus(200)
 	}
 
 }
 
-proxyClient.get('assistant/*', ProxyRequest)
-proxyClient.post('assistant/*', ProxyRequest)
-proxyClient.put('assistant/*', ProxyRequest)
-proxyClient.delete('assistant/*', ProxyRequest)
+proxyClient.on('-get|assistant\\/.*|assistant', ProxyRequest)
+proxyClient.on('-post|assistant\\/.*', ProxyRequest)
+proxyClient.on('-put|assistant\\/.*', ProxyRequest)
+proxyClient.on('-delete|assistant\\/.*', ProxyRequest)
 
 proxyClient.connect()
