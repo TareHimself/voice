@@ -5,9 +5,8 @@ if sys.platform == "win32" and (3, 8, 0) <= sys.version_info < (3, 9, 0):
 
 import signal
 import time
-import wx
+#import wx
 from core.threads import StartServer
-from ui.main_window import MainWindow
 from core.events import gEmitter
 from core.assistant import Assistant
 

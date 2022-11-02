@@ -6,7 +6,6 @@ from nltk.stem.porter import PorterStemmer
 
 stemmer = PorterStemmer()
 
-
 def tokenize(sentence):
     nltk.word_tokenize(sentence)
 

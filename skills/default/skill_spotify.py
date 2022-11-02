@@ -4,7 +4,7 @@ import json
 import webbrowser
 import requests
 from core.numwrd import num2wrd, wrd2num
-from core.skills import Skill
+from core.decorators import Skill
 from core.constants import config, DATA_PATH
 from urllib.parse import urlencode
 from core.threads import server
@@ -87,6 +87,7 @@ def ValidateSpotifyAuth():
 
     return True
 
+
 def SpotifySkillValidation(f):
     async def inner(*args, **kwargs):
         if ValidateSpotifyAuth():
@@ -98,28 +99,28 @@ def SpotifySkillValidation(f):
 
 @Skill(["skill_spotify_pause"])
 @SpotifySkillValidation
-async def Pause(phrase, args):
+async def Pause(e, args):
     requests.put(url="https://api.spotify.com/v1/me/player/pause",
                  headers=header_data)
 
 
 @Skill(["skill_spotify_resume"])
 @SpotifySkillValidation
-async def Resume(phrase, args):
+async def Resume(e, args):
     requests.put(url="https://api.spotify.com/v1/me/player/play",
                  headers=header_data)
 
 
 @Skill(["skill_spotify_skip"])
 @SpotifySkillValidation
-async def Skip(phrase, args):
+async def Skip(e, args):
     requests.post(url="https://api.spotify.com/v1/me/player/next",
                   headers=header_data)
 
 
 @Skill(["skill_spotify_play"], r"(?:play)(?:\s(album|track|playlist))?\s(.*)")
 @SpotifySkillValidation
-async def Play(phrase, args):
+async def Play(e, args):
     type_to_play = "track"
     item_name = args[1]
 
@@ -150,7 +151,7 @@ async def Play(phrase, args):
 
 @Skill(["skill_spotify_add"], r"(?:add|queue)\s(.*)")
 @SpotifySkillValidation
-async def AddToQueue(phrase, args):
+async def AddToQueue(e, args):
     result = requests.get(url="https://api.spotify.com/v1/search", headers=header_data, params={
         "q": args[0],
         "type": ['track']
@@ -167,7 +168,7 @@ async def AddToQueue(phrase, args):
 
 @Skill(["skill_spotify_volume"], r"(?:music volume|volume music)\s([a-z\s]+?)(?:\s(?:percent$)|$)")
 @SpotifySkillValidation
-async def ModifyVolume(phrase, args):
+async def ModifyVolume(e, args):
     volume = int(wrd2num(args[0]))
 
     if volume < 0 or volume > 100:

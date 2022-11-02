@@ -1,5 +1,5 @@
 {
-  "nlu": [
+  "intents": [
     {
       "intent": "skill_spotify_play",
       "examples": [

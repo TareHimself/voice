@@ -10,6 +10,7 @@ from core.constants import config
 from uuid import uuid4
 # Third-party library
 from aiohttp import web
+from core.logger import log
 
 from core.singletons import GetSingleton, Singleton
 from core.threads.timer import StartTimer
@@ -71,11 +72,10 @@ class ServerThread(ThreadEmitter):
         self.WebServer = None
 
     def HandleJob(self, job: str, *args, **kwargs):
-        self.print(job)
+        log(job)
         if job == 'end':
             asyncio.run(self.WebServer.app.shutdown())
             asyncio.run(self.WebServer.app.cleanup())
-            print('STOPPED SERVER')
         elif job == 'add_spotify_callback':
             self.spotify_callbacks.append(args[0])
 

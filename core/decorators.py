@@ -1,7 +1,9 @@
 import traceback
 import uuid
-
-from core.singletons import GetSingleton, Singleton,SetSingleton
+import inspect
+from functools import partial, wraps
+from core.logger import log
+from core.singletons import GetSingleton, Singleton, SetSingleton
 
 
 class MainLoader(Singleton):
@@ -9,28 +11,44 @@ class MainLoader(Singleton):
         super().__init__(id="main-loader")
         self.loaders = {}
 
+    def __len__(self):
+        return len(self.loaders.values())
+
     def AddLoader(self, id, loader):
         if id not in self.loaders.keys():
-            self.loaders.keys(id, loader)
+            self.loaders[id] = loader
 
-    async def LoadAll(self, va):
-        for loader in self.loaders.values():
-            await loader()
+    async def LoadCurrent(self, va):
+
+        items = list(self.loaders.keys())
+        try:
+            for id in items:
+                call_funct = self.loaders[id]
+                if len(inspect.getargspec(call_funct).args) == 0:
+                    await call_funct()
+                else:
+                    await call_funct(va)
+                del self.loaders[id]
+
+            if len(self.loaders.keys()):
+                await self.LoadCurrent(va)
+        except Exception as e:
+            log(e)
 
 
 main_loader = MainLoader()
 
 
-def Loader(loader_id="{}".format(uuid.uuid4())):
-    def inner(func):
-        main_loader.AddLoader(loader_id, func)
-        return func
-
-    return inner
+def AssistantLoader(f, loader_id=""):
+    loader_id = loader_id if len(
+        loader_id) > 0 else "unnamed-{}".format(uuid.uuid4())
+    log("Adding loader", loader_id)
+    main_loader.AddLoader(loader_id, f)
+    return f
 
 
 loaded_skills = {}
-SetSingleton('skills',loaded_skills)
+SetSingleton('skills', loaded_skills)
 
 
 def Skill(intents=[], params_regex=r".*"):
@@ -39,19 +57,19 @@ def Skill(intents=[], params_regex=r".*"):
     #     hot_reloading[filename] = []
 
     def inner(func):
-        async def wrapper(*args, **kwargs):
+        async def wrapper(event, args):
             va = GetSingleton('assistant')
             va.OnSkillStart()
             try:
-                await func(*tuple([va] + list(args)), **kwargs)
+                await func(*tuple([] + list(args)), **kwargs)
             except Exception as e:
-                print('Error while executing skill for intents |', intents)
-                print(traceback.format_exc())
+                log('Error while executing skill for intents |', intents)
+                log(traceback.format_exc())
 
             va.OnSkillEnd()
 
         for intent in intents:
-            loaded_skills[intent] = [wrapper,params_regex]
+            loaded_skills[intent] = [wrapper, params_regex]
 
         return wrapper
 

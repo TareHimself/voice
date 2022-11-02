@@ -1,7 +1,7 @@
 import json
 from os import path, getcwd, mkdir
 from pytz import timezone as tz
-import wx
+#import wx
 
 SECRETS_PATH = path.join(getcwd(), '../secrets.json')
 
@@ -31,8 +31,8 @@ with open(CONFIG_PATH, "r") as infile:
 class DynamicData:
     def __init__(self):
         self.wake_word = "alice"
-        self.wx_color_darkgrey = wx.Colour(31, 31, 31)
-        self.wx_visualizer_band_color = wx.Colour(255, 255, 255)
+        #self.wx_color_darkgrey = wx.Colour(31, 31, 31)
+        #self.wx_visualizer_band_color = wx.Colour(255, 255, 255)
         self.timezone = tz("US/Eastern")
 
 

@@ -1,5 +1,5 @@
-from core.skills import Skill
-from word2number import w2n
+from core.decorators import Skill
+from core.numwrd import wrd2num
 
 from core.utils import TextToSpeech
 
@@ -25,22 +25,22 @@ def ParseStringToMath(expr):
             if word.lower() in token_keys:
 
                 if len(latest_unconverted.strip()) > 0:
-                    result += str(w2n.word_to_num(latest_unconverted))
+                    result += str(wrd2num(latest_unconverted))
                     latest_unconverted = ""
                 result += tokens[word]
             else:
                 latest_unconverted += word.strip() + " "
 
         if len(latest_unconverted.strip()) > 0:
-            result += str(w2n.word_to_num(latest_unconverted))
+            result += str(wrd2num(latest_unconverted))
 
         return result
     except ValueError as e:
         return ''
 
 
-@Skill(["skill_arithmetic"],r"(?:(?:math|calculate|arithmetic|what is)\s?)?(.*)")
-async def DoMath(phrase, args):
+@Skill(["skill_arithmetic"], r"(?:(?:math|calculate|arithmetic|what is)\s?)?(.*)")
+async def DoMath(e, args):
     result = ParseStringToMath(args[0])
     if len(result):
         TextToSpeech("The answer is {}".format(str(eval(result))))
