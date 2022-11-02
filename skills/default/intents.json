@@ -4,7 +4,7 @@
       "intent": "skill_spotify_play",
       "examples": [
         "play in the name of love",
-        "play girls on boys]",
+        "play girls on boys",
         "play track lilly by alan walker",
         "play playlist familia",
         "play albumn genius by sia",
@@ -83,12 +83,6 @@
       ]
     },
     {
-      "regex": "math_expr",
-      "examples": [
-        ".*"
-      ]
-    },
-    {
       "intent": "skill_schedule_add",
       "examples": [
         "remind me to smoke weed at five am",
@@ -110,12 +104,6 @@
         "read me my schedule",
         "what is on my schedule for today",
         "what are my reminders"
-      ]
-    },
-    {
-      "regex": "time",
-      "examples": [
-        ".*"
       ]
     },
     {

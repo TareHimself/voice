@@ -2,16 +2,19 @@ import torch
 import torch.nn as nn
 
 
-class NeuralNet(nn.Module):
-    def __init__(self,input_size,hidden_size,num_classes):
-        super().__init__()
-        self.fr  = nn.Sequential(
-            nn.Linear(input_size,hidden_size),
-            nn.ReLU(),
-            nn.Linear(hidden_size,hidden_size),
-            nn.ReLU(),
-            nn.Linear(hidden_size,num_classes)
-            )
+class IntentsNeuralNet(nn.Module):
+    def __init__(self, vocab_size, embed_dim, num_class):
+        super()
+        self.embedding = nn.EmbeddingBag(vocab_size, embed_dim, sparse=True)
+        self.fc = nn.Linear(embed_dim, num_class)
+        self.init_weights()
 
-    def forward(self,x):
-        return self.fr(x)
+    def init_weights(self):
+        initrange = 0.5
+        self.embedding.weight.data.uniform_(-initrange, initrange)
+        self.fc.weight.data.uniform_(-initrange, initrange)
+        self.fc.bias.data.zero_()
+
+    def forward(self, text, offsets):
+        embedded = self.embedding(text, offsets)
+        return self.fc(embedded)
