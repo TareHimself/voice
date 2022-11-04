@@ -3,100 +3,67 @@ from os import path, getcwd
 from torchtext.data.utils import get_tokenizer
 from torchtext.vocab import build_vocab_from_iterator
 import numpy as np
+from tqdm import tqdm
 import torch
 import torch.nn as nn
 from nltk_utils import tokenize, stem, bag_of_words
 from model import IntentsNeuralNet
 from torch.utils.data import Dataset, DataLoader
 from core.logger import log
+from transformers import BertTokenizer
 
 
 class IntentsDataset(Dataset):
     def __init__(self, d: dict):
-        xy = []
-        self.train_y = []
+        self.labels = []
         self.train_x = []
-        self.all_x = []
+        self.train_y = []
 
-
-        tokenizer = get_tokenizer('basic_english')
+        tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
         tokens = []
 
         for intent_obj in d['intents']:
             tag = intent_obj['intent']
-            self.train_y.append(tag)
+            self.labels.append(tag)
             self.train_x = intent_obj['examples']
             for example in intent_obj['examples']:
-                e = tokenizer(example)
-                self.all_x.extend(e)
-                xy.append((e, tag))
+                self.train_x.append(tokenizer(example, padding='max_length', max_length=512, truncation=True,
+                                                return_tensors="pt"))
+                self.train_y.append(tag)
 
-        vocab_x = build_vocab_from_iterator([set(self.all_x)], specials=["<unk>"])
-        vocab_x.set_default_index(vocab_x["<unk>"])
+    def __len__(self):
+        return len(self.train_xy)
 
-        vocab_y = build_vocab_from_iterator([set(self.train_y)], specials=["<unk>"])
-        vocab_y.set_default_index(vocab_y["<unk>"])
-
-        self.text_pipeline = lambda x: vocab_x(tokenizer(x))
-        self.label_pipeline = lambda x: vocab_y([x])[0]
-        print(list(map(self.text_pipeline,self.train_x[0])),self.train_x)
-        #print(text_pipeline("Play in the name of love"), label_pipeline('skill_time'))
-
-        # for intent_obj in d['intents']:
-        #     tag = intent_obj['intent']
-        #     self.tags.append(tag)
-        #     for example in intent_obj['examples']:
-        #         e = tokenize(example)
-        #         self.all_x.extend(e)
-        #         xy.append((e, tag))
-
-    #     ignore_words = ['?', '!', '.', ',']
-    #     self.all_x = sorted(set([stem(w) for w in self.all_x if w not in ignore_words]))
-    #     self.tags = sorted(set(self.tags))
-    #
-    #     self.x_train = []
-    #     self.y_train = []
-    #
-    #     for (tokenized, tag) in xy:
-    #         bag = bag_of_words(tokenized, self.all_x)
-    #         self.x_train.append(bag)
-    #
-    #         label = self.tags.index(tag)
-    #         self.y_train.append(label)
-    #
-    # def __len__(self):
-    #     return len(self.x_train)
-    #
-    # def __getitem__(self, idx):
-    #
-    #     return torch.tensor(self.x_train[idx]).float(), torch.tensor(self.y_train[idx]).float()
+    def __getitem__(self, idx):
+        return self.train_xy[idx]
 
 
 def train(intents: dict, save_path, batch_size=4, hidden_size=8, learning_rate=0.001, epochs=1000):
     dataset = IntentsDataset(intents)
 
-    return
     train_loader = DataLoader(
         dataset=dataset, batch_size=batch_size, num_workers=0, shuffle=True)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    input_size = len(dataset.x_train[0])
-    output_size = len(dataset.train_y)
-    model = IntentsNeuralNet(input_size, hidden_size, output_size).to(device)
+    output_size = len(dataset.labels)
+    model = IntentsNeuralNet( output_size).to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     for epoch in range(epochs):
-        for idx, label_word in enumerate(train_loader):
-            words, labels = label_word
-            words = words.to(device)
-            labels = labels.to(device)
-            outputs = model(words)
+        for idx , (train_input, train_label) in tqdm(train_loader):
+            train_label = train_label.to(device)
+            mask = train_input['attention_mask'].to(device)
+            input_id = train_input['input_ids'].squeeze(1).to(device)
 
-            loss = criterion(outputs, labels.long())
+            output = model(input_id, mask)
 
-            optimizer.zero_grad()
-            loss.backward()
+            batch_loss = criterion(output, train_label.long())
+
+            acc = (output.argmax(dim=1) == train_label).sum().item()
+
+            model.zero_grad()
+            batch_loss.backward()
             optimizer.step()
 
         if (epoch + 1) % int(0.1 * epochs) == 0:

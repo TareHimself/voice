@@ -1,20 +1,22 @@
-import torch
-import torch.nn as nn
-
+from torch import nn
+from transformers import BertModel
 
 class IntentsNeuralNet(nn.Module):
-    def __init__(self, vocab_size, embed_dim, num_class):
-        super()
-        self.embedding = nn.EmbeddingBag(vocab_size, embed_dim, sparse=True)
-        self.fc = nn.Linear(embed_dim, num_class)
-        self.init_weights()
 
-    def init_weights(self):
-        initrange = 0.5
-        self.embedding.weight.data.uniform_(-initrange, initrange)
-        self.fc.weight.data.uniform_(-initrange, initrange)
-        self.fc.bias.data.zero_()
+    def __init__(self, num_outputs,dropout=0.5):
 
-    def forward(self, text, offsets):
-        embedded = self.embedding(text, offsets)
-        return self.fc(embedded)
+        super().__init__()
+
+        self.bert = BertModel.from_pretrained('bert-base-cased')
+        self.dropout = nn.Dropout(dropout)
+        self.linear = nn.Linear(768, num_outputs)
+        self.relu = nn.ReLU()
+
+    def forward(self, input_id, mask):
+
+        _, pooled_output = self.bert(input_ids= input_id, attention_mask=mask,return_dict=False)
+        dropout_output = self.dropout(pooled_output)
+        linear_output = self.linear(dropout_output)
+        final_layer = self.relu(linear_output)
+
+        return final_layer
