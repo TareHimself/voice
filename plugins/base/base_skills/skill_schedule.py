@@ -3,18 +3,18 @@ from uuid import uuid4
 from core.numwrd import num2wrd
 from core.decorators import Skill
 from datetime import datetime
-from scheduled_event import ScheduledEvent
-from core.utils import GetFollowUp, GetNluData, TextToSpeech
+from .scheduled_event import ScheduledEvent
+from core.utils import GetFollowUp, GetNluData
+from text_to_speech import TextToSpeech
 from core.str2time import stringToTime
 from core.db import db
-from core.constants import dynamic as data
 from core.decorators import AssistantLoader
 from core.logger import log
-from default_utils import TimeToSttText
+from .utils import TimeToSttText
 
 
 @AssistantLoader
-async def Intialize():
+async def Intialize(va):
     log('Generating Schedules Database')
     cur = db.cursor()
     cur.execute('''
@@ -29,7 +29,7 @@ async def Intialize():
         [event_id, msg, time] = list(event)
         time = datetime.fromisoformat(time)
 
-        if time > datetime.now(data.timezone):
+        if time > datetime.now(va.tz):
             ScheduledEvent({'end_at': time, "msg": msg, "id": event_id})
         else:
             cur.execute("DELETE FROM skill_schedule WHERE id=?", [event_id])
@@ -41,9 +41,9 @@ async def Intialize():
 
 @Skill(["skill_schedule_add"], r"(?:remind (?:me (?:to )))?([a-zA-Z ]+?)(?:\sin(?: a| an)?|\sat)\s(.*)")
 async def ScheduleEvent(e, args):
-
+    tz = e.assistant.tz
     task, time = args
-    end_time = stringToTime(time, data.timezone)
+    end_time = stringToTime(time, tz)
 
     if end_time:
         event_id = str(uuid4())
@@ -53,7 +53,8 @@ async def ScheduleEvent(e, args):
 
         db.commit()
 
-        ScheduledEvent({'end_at': end_time, "msg": task, "id": event_id})
+        ScheduledEvent({'end_at': end_time, "msg": task,
+                       "id": event_id}, tz)
 
         TextToSpeech('Reminder added.')
     else:

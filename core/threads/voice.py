@@ -7,34 +7,34 @@ import sounddevice as sd
 from core.events import ThreadEmitter
 
 CHANNELS = 1
-INPUT_DEVICE = None  # 4
-MAIN_STREAM_SAMPLE_RATE = 44100
+DEFAULT_INPUT_DEVICE = None  # 4
+DEFAULT_SAMPLE_RATE = 16000
 MAIN_STREAM_BLOCK_SIZE = 8000
 FORMAT = pyaudio.paInt16
 
 
 class VoiceThread(ThreadEmitter):
 
-    def __init__(self, callback, chunk=None, samplerate_in=44100):
+    def __init__(self, callback, chunk=None, device=DEFAULT_INPUT_DEVICE, samplerate=DEFAULT_SAMPLE_RATE):
         super(VoiceThread, self).__init__()
         self.chunk = chunk
-        self.samplerate_in = samplerate_in
+        self.samplerate = samplerate
         self.callback = callback
+        self.device = None
 
     def run(self):
         while True:
             audio = pyaudio.PyAudio()
 
-            RATE = 16000
             # A frame must be either 10, 20, or 30 ms in duration for webrtcvad
             FRAME_DURATION = 30
             CHUNK = self.chunk if self.chunk else int(
-                RATE * FRAME_DURATION / 1000)
+                self.samplerate * FRAME_DURATION / 1000)
 
-            stream = audio.open(input_device_index=INPUT_DEVICE,
+            stream = audio.open(input_device_index=self.device,
                                 format=FORMAT,
                                 channels=CHANNELS,
-                                rate=self.samplerate_in,
+                                rate=self.samplerate,
                                 input=True,
                                 frames_per_buffer=CHUNK)
 
@@ -48,7 +48,7 @@ class VoiceThread(ThreadEmitter):
                 # self.ProcessJobs()
 
 
-def StartVoice(callback, chunk=None, samplerate=44100):
-    voice = VoiceThread(callback, chunk, samplerate)
+def StartVoice(callback, chunk=None, device=DEFAULT_INPUT_DEVICE, samplerate=DEFAULT_SAMPLE_RATE):
+    voice = VoiceThread(callback, chunk, device, samplerate)
     voice.start()
     return voice

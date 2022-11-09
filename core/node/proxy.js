@@ -5,19 +5,27 @@ const axios = require("axios")
 const proxyClient = new Client('wss://proxy.oyintare.dev/')
 
 async function ProxyRequest(req) {
-	console.log(req.body)
+
 	try {
-		const result = await axios({
+		const actual_url = `http://127.1.0.0:24559${req.originalUrl.substring("/assistant".length)}`
+
+		axios({
 			method: req.method.toLowerCase(),
-			url: `http://localhost:24559${req.originalUrl.substring("/assistant".length)}`,
+			url: actual_url,
 			body: req.body,
 			headers: req.headers,
 			validateStatus: () => true,
+		}).then((result) => {
+			console.log('REQUEST RESULT ', result.data)
+			req.send(result.data)
+		}).catch((err) => {
+			console.log(err)
+			req.sendStatus(200)
 		})
-		req.send(result.data)
+
 	}
 	catch (err) {
-		console.log(err.message)
+		console.log(err)
 		req.sendStatus(200)
 	}
 

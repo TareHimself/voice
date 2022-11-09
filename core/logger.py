@@ -8,9 +8,9 @@ def _process_log_buffer():
         d = log_buffer.get()
         if d == None:
             return
-        args, should_print = d
+        args, kwargs, should_print = d
         if should_print:
-            print(*args)
+            print(*args, **kwargs)
 
 
 _logger_buffer_handler = Thread(
@@ -18,5 +18,5 @@ _logger_buffer_handler = Thread(
 _logger_buffer_handler.start()
 
 
-def log(*args, print_to_screen=True):
-    log_buffer.put([args, print_to_screen])
+def log(*args, **kwargs):
+    log_buffer.put([args, kwargs, True])

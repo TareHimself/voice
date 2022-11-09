@@ -1,7 +1,7 @@
 import traceback
 import uuid
 import inspect
-from functools import partial, wraps
+from core.constants import SINGLETON_SERVER_ID
 from core.logger import log
 from core.singletons import GetSingleton, Singleton, SetSingleton
 
@@ -19,8 +19,8 @@ class MainLoader(Singleton):
             self.loaders[id] = loader
 
     async def LoadCurrent(self, va):
-
         items = list(self.loaders.keys())
+        log(f"About to load {items}")
         try:
             for id in items:
                 call_funct = self.loaders[id]
@@ -39,12 +39,17 @@ class MainLoader(Singleton):
 main_loader = MainLoader()
 
 
-def AssistantLoader(f, loader_id=""):
-    loader_id = loader_id if len(
-        loader_id) > 0 else "unnamed-{}".format(uuid.uuid4())
-    log("Adding loader", loader_id)
-    main_loader.AddLoader(loader_id, f)
-    return f
+def AssistantLoader(loader_id=""):
+
+    if callable(loader_id):
+        main_loader.AddLoader("loader-{}".format(uuid.uuid4()), loader_id)
+        return loader_id
+
+    def wrapper(func):
+        nonlocal loader_id
+        main_loader.AddLoader(loader_id, func)
+        return func
+    return wrapper
 
 
 loaded_skills = {}
@@ -52,6 +57,7 @@ SetSingleton('skills', loaded_skills)
 
 
 def Skill(intents=[], params_regex=r".*"):
+
     # filename = inspect.stack()[1].filename
     # if filename not in hot_reloading.keys():
     #     hot_reloading[filename] = []
@@ -61,7 +67,7 @@ def Skill(intents=[], params_regex=r".*"):
             va = GetSingleton('assistant')
             va.OnSkillStart()
             try:
-                await func(*tuple([] + list(args)), **kwargs)
+                await func(event, args)
             except Exception as e:
                 log('Error while executing skill for intents |', intents)
                 log(traceback.format_exc())
@@ -73,4 +79,15 @@ def Skill(intents=[], params_regex=r".*"):
 
         return wrapper
 
+    return inner
+
+
+def ServerHandler(route: str):
+    def inner(handler):
+        log('Added Route', route, handler)
+        server = GetSingleton(SINGLETON_SERVER_ID)
+        server.app.default_router.add_rules([
+            (route, handler),
+        ])
+        return handler
     return inner

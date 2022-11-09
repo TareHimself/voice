@@ -1,6 +1,6 @@
 import numpy as np
 from wx.html2 import WebView as WV
-from core.constants import dynamic
+from core.constants_1 import dynamic
 from core.events import gEmitter
 from core.threads import StartFFT
 

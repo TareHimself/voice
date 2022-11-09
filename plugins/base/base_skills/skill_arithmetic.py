@@ -1,7 +1,7 @@
 from core.decorators import Skill
 from core.numwrd import wrd2num
 
-from core.utils import TextToSpeech
+from plugins.base.text_to_speech import TextToSpeech
 
 tokens = {
     "plus": "+",

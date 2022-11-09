@@ -1,6 +1,6 @@
 import numpy as np
 import wx
-from core.constants import dynamic
+from core.constants_1 import dynamic
 from core.events import gEmitter
 from core.threads import StartFFT
 

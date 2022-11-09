@@ -2,8 +2,8 @@ from datetime import datetime, timezone
 import random
 from core.decorators import Skill
 from core.numwrd import num2wrd
-from core.utils import TextToSpeech
-from default_utils import TimeToSttText
+from plugins.base.text_to_speech import TextToSpeech
+from .utils import TimeToSttText
 
 
 @Skill(["skill_time"])

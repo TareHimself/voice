@@ -1,22 +1,57 @@
 import base64
+import tornado.web
 from datetime import datetime, timedelta
 import json
 import webbrowser
+import aiohttp
 import requests
+from core.logger import log
 from core.numwrd import num2wrd, wrd2num
-from core.decorators import Skill
-from core.constants import config, DATA_PATH
+from core.decorators import Skill, AssistantLoader, ServerHandler
+from core.singletons import GetSingleton
+from aiohttp import web
+from core.constants import DIRECTORY_DATA, SINGLETON_SERVER_ID
 from urllib.parse import urlencode
-from core.threads import server
-from os import path
+from core.threads.server import CreateProxiedBody
+from os import path, mkdir
+from constants import PLUGIN_ID
+from plugins.base.text_to_speech import TextToSpeech
 
-from core.utils import DisplayUiMessage, TextToSpeech
+SPOTIFY_PATH = path.join(DIRECTORY_DATA, PLUGIN_ID, 'spotify')
 
-SPOTIFY_AUTH_PATH = path.join(DATA_PATH, 'spotify_auth.json')
+SPOTIFY_AUTH_PATH = path.join(SPOTIFY_PATH, 'auth.json')
+
+SPOTIFY_CONFIG_PATH = path.join(SPOTIFY_PATH, 'config.json')
 
 spotify_auth = None
 header_data = None
 spotify_auth_refresh = None
+config = None
+server = GetSingleton(SINGLETON_SERVER_ID)
+
+
+@AssistantLoader
+async def SetSpotifyAuth():
+    global spotify_auth
+    global config
+    if not path.exists(SPOTIFY_PATH):
+        mkdir(SPOTIFY_PATH)
+
+    if path.exists(SPOTIFY_AUTH_PATH):
+        with open(SPOTIFY_AUTH_PATH, 'r') as f:
+            spotify_auth = json.load(f)
+
+    if not path.exists(SPOTIFY_CONFIG_PATH):
+        config = {
+            'id': '',
+            'secret': '',
+            'uri': '',
+        }
+        with open(SPOTIFY_CONFIG_PATH, 'w') as f:
+            f.write(json.dumps(config, indent=2))
+    else:
+        with open(SPOTIFY_CONFIG_PATH, 'r') as f:
+            config = json.load(f)
 
 
 def UpdateHeader(auth):
@@ -39,6 +74,36 @@ def OnSpotifyAuthReceived(auth):
         UpdateHeader(auth)
         with open(SPOTIFY_AUTH_PATH, "w") as outfile:
             json.dump(spotify_auth, outfile, indent=4)
+
+
+@ServerHandler(r'/spotify')
+class SpotifyAuthHandler(tornado.web.RequestHandler):
+    async def get(self):
+        self.write(f"{self.get_query_argument('code')}")
+
+
+# async def OnSpotifyAuth(request: web.Request):
+#     code = request.rel_url.query['code']
+#     url = "https://accounts.spotify.com/api/token"
+
+#     payload = {
+#         "code": code,
+#         "redirect_uri": config['uri'],
+#         'grant_type': "authorization_code"
+#     }
+
+#     auth_code = config['id'] + \
+#         ':' + config['secret']
+#     headers = {
+#         "Authorization": "Basic " + base64.urlsafe_b64encode((auth_code).encode('ascii')).decode('ascii'),
+#         'Content-Type': 'application/x-www-form-urlencoded'}
+
+#     async with aiohttp.ClientSession() as session:
+#         async with session.post(url=url, headers=headers, data=payload) as resp:
+#             auth_data = await resp.json()
+#             OnSpotifyAuthReceived(auth_data)
+
+#     return CreateProxiedBody("Done")
 
 
 def ValidateSpotifyAuth():
@@ -67,11 +132,11 @@ def ValidateSpotifyAuth():
         payload = {
             'grant_type': 'refresh_token',
             "refresh_token": spotify_auth['refresh_token'],
-            "client_id": config['spotify']['client_id']
+            "client_id": config['id']
         }
 
-        auth_code = config['spotify']['client_id'] + \
-            ':' + config['spotify']['client_secret']
+        auth_code = config['id'] + \
+            ':' + config['secret']
         headers = {"Authorization": "Basic " + base64.urlsafe_b64encode(auth_code.encode('ascii')).decode('ascii'),
                    'Content-Type': 'application/x-www-form-urlencoded'}
         url = "https://accounts.spotify.com/api/token"
@@ -145,7 +210,7 @@ async def Play(e, args):
                 'offset': {'position': 0}
             })
 
-        DisplayUiMessage("Playing {}".format(
+        log("Playing {}".format(
             result[query]['items'][0]['name']))
 
 
@@ -162,7 +227,7 @@ async def AddToQueue(e, args):
             url="https://api.spotify.com/v1/me/player/queue?uri={}".format(
                 result['tracks']['items'][0]['uri']),
             headers=header_data)
-        DisplayUiMessage("Queued {}".format(
+        log("Queued {}".format(
             result['tracks']['items'][0]['name']))
 
 

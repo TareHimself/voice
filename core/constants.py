@@ -1,39 +1,25 @@
-import json
 from os import path, getcwd, mkdir
-from pytz import timezone as tz
-#import wx
 
-SECRETS_PATH = path.join(getcwd(), '../secrets.json')
-
-DATA_PATH = path.join(getcwd(), 'data')
-
-if not path.exists(DATA_PATH):
-    mkdir(DATA_PATH)
-
-TTS_PATH = path.join(DATA_PATH, 'tts_model.pt')
-STT_PATH = path.join(DATA_PATH, 'stt_model')
-NLU_PATH = path.join(DATA_PATH, 'nlu.tar.gz')
-CONFIG_PATH = path.join(DATA_PATH, 'config.json')
-TTS_SPEAKER = 'en_10'
-TTS_URL = 'https://models.silero.ai/models/tts/en/v3_en.pt'
-VOSK_MODEL_URL = "https://alphacephei.com/vosk/models/vosk-model-en-us-daanzu-20200905.zip"
-main_window_name = "Voice"
-
-if not path.exists(CONFIG_PATH):
-    with open(CONFIG_PATH, 'w') as outf:
-        json.dump({}, outf, indent=4)
-
-config = {}
-with open(CONFIG_PATH, "r") as infile:
-    config = json.load(infile)
+EVENT_SEND_PHRASE_TO_ASSISTANT = "core-send-assistant-phrase"
+EVENT_ON_ASSISTANT_RESPONSE = "core-assistant-response"
+EVENT_ON_FOLLOWUP_START = "core-on-followup-start"
+EVENT_ON_FOLLOWUP_MSG = "core-on-followup-msg"
+EVENT_ON_FOLLOWUP_END = "core-on-followup-end"
+EVENT_ON_SKILL_START = "core-on-skill-start"
+EVENT_ON_SKILL_END = "core-on-skill-end"
+EVENT_ON_PHRASE_PARSE_ERROR = "core-on-phrase-parse-error"
 
 
-class DynamicData:
-    def __init__(self):
-        self.wake_word = "alice"
-        #self.wx_color_darkgrey = wx.Colour(31, 31, 31)
-        #self.wx_visualizer_band_color = wx.Colour(255, 255, 255)
-        self.timezone = tz("US/Eastern")
+DIRECTORY_PLUGINS = path.normpath(path.join(getcwd(), 'plugins'))
+DIRECTORY_DATA = path.normpath(path.join(getcwd(), 'data'))
+DIRECTORY_DATA_CORE = path.normpath(path.join(getcwd(), 'data', 'core'))
+DIRECTORY_DATA_CORE_INTENTS_INFERENCE = path.normpath(
+    path.join(getcwd(), 'data', 'core','intents.ptf'))
 
+SINGLETON_SERVER_ID = "singleton-server"
+SINGLETON_ASSISTANT_ID = "singleton-assistant"
+SINGLETON_MAIN_LOADER_ID = "singleton-main-loader"
+SINGLETON_INTENTS_INFERENCE_ID = "singleton-intents-inference"
 
-dynamic = DynamicData()
+if not path.exists(DIRECTORY_DATA_CORE):
+    mkdir(DIRECTORY_DATA_CORE)

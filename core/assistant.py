@@ -1,58 +1,24 @@
 import asyncio
 import importlib
-import json
+import core.decorators
+from core import constants
 import re
-from os import getcwd, listdir, path
+from os import getcwd, listdir, path, mkdir
 import sys
-from core.constants import DATA_PATH, dynamic, config
-from core.decorators import AssistantLoader
 from core.events import gEmitter
 from core.logger import log
 from core.loops import CreateAsyncLoop
-from core.singletons import Singleton, GetSingleton
-from core.skills import TryRunCommand
-from core.threads import StartSpeechRecognition, StartTTS
-from core.utils import TextToSpeech, DisplayUiMessage, GetFileHash
-from threading import Thread
+from core.singletons import Singleton, GetSingleton, SetSingleton
 import asyncio
-import aiohttp
+import importlib.util
 import traceback
+from pytz import timezone
+from core.constants import DIRECTORY_PLUGINS, DIRECTORY_DATA, DIRECTORY_DATA_CORE, SINGLETON_INTENTS_INFERENCE_ID, DIRECTORY_DATA_CORE_INTENTS_INFERENCE
+from core.neural.train import train_intents
+from core.neural.inference import IntentInference
 
 
-LATEST_HASH_PATH = path.join(DATA_PATH, 'nlu.sha')
-BASE_NLU_PATH = path.join(getcwd(), 'nlu.yml')
-
-
-SKILLS_PATH = path.join(getcwd(), 'skills')
-nlu_combined = []
-
-
-@AssistantLoader
-async def LoadSkills(va):
-    log('Loading Skills')
-    for skill_dir in listdir(path.normpath(SKILLS_PATH)):
-        sys.path.insert(0, path.normpath(path.join(SKILLS_PATH, skill_dir)))
-        for file in listdir(path.normpath(path.join(SKILLS_PATH, skill_dir))):
-            if file.endswith('.json'):
-                with open(path.normpath(path.join(SKILLS_PATH, skill_dir, file)), 'r') as con_fig:
-                    config_dict = json.load(con_fig)
-                    nlu_combined.extend(config_dict['intents'])
-            elif file.endswith('.py') and file.startswith('skill_'):
-                try:
-                    impored_module = importlib.import_module(file[:-3])
-                    log('Imported Module', impored_module.__name__)
-                except Exception as e:
-                    log('error while compiling', file)
-                    log(traceback.format_exc())
-
-                # with open(path.join(SKILLS_PATH, dir, file), 'r') as skill_f:
-                #     try:
-                #         exec(skill_f.read(), globals())
-                #     except Exception as e:
-                #         log('error while compiling', file)
-                #         log(traceback.format_exc())
-
-    log('Done Loading Skills')
+WAKE_WORD = 'alice'
 
 
 class SkillEvent:
@@ -67,23 +33,66 @@ class Assistant(Singleton):
         super().__init__(id='assistant')
         self.model_is_ready = False
         self.is_processing_command = False
-        self.speaker = StartTTS()
         self.waiting_for_command = False
         self.is_following_up = False
+        self.plugins = {}
+        self.tz = timezone('US/Eastern')
         self.loop = CreateAsyncLoop()
         self.loader = GetSingleton("main-loader")
-        gEmitter.on('send_speech_voice', self.DoSpeech)
-        gEmitter.on('start_follow_up', self.StartWaitFollowUp)
-        gEmitter.on('stop_follow_up', self.StopWaitFollowUp)
-        gEmitter.on('send_skill_start', self.OnSkillStart)
-        gEmitter.on('send_skill_end', self.OnSkillEnd)
-        self.RunAsync(self.loader.LoadCurrent(self))
-        self.speech_recognition = StartSpeechRecognition(
-            onVoiceData=self.OnVoiceProcessed, onStart=self.OnVoiceStart)
+        gEmitter.on(constants.EVENT_ON_FOLLOWUP_START, self.StartWaitFollowUp)
+        gEmitter.on(constants.EVENT_ON_FOLLOWUP_END, self.StopWaitFollowUp)
+        gEmitter.on(constants.EVENT_ON_SKILL_START, self.OnSkillStart)
+        gEmitter.on(constants.EVENT_ON_SKILL_END, self.OnSkillEnd)
+        gEmitter.on(constants.EVENT_SEND_PHRASE_TO_ASSISTANT, self.OnPhrase)
+        self.RunAsync(self.LoadPlugins())
 
     def RunAsync(self, awaitable):
         return asyncio.run_coroutine_threadsafe(awaitable,
                                                 self.loop)
+
+    async def LoadPlugins(self):
+        log('Loading Plugins')
+        plugin_intents = []
+        for plugin_dir in listdir(DIRECTORY_PLUGINS):
+
+            LOAD_FILE = path.normpath(
+                path.join(DIRECTORY_PLUGINS, plugin_dir, 'load.py'))
+
+            if not path.exists(LOAD_FILE):
+                continue
+
+            try:
+                sys.path.insert(0, path.join(DIRECTORY_PLUGINS, plugin_dir))
+
+                spec = importlib.util.spec_from_file_location(
+                    '{}.load'.format(plugin_dir), LOAD_FILE)
+                imported_plugin = importlib.util.module_from_spec(spec)
+                # sys.modules[spec.name] = module
+                spec.loader.exec_module(imported_plugin)
+                # imported_plugin = importlib.import_module(
+                #     "plugins.{}.load".format(plugin_dir))
+
+                plugin_id = imported_plugin.GetId()
+
+                self.plugins[plugin_id] = imported_plugin
+
+                plugin_intents.extend(imported_plugin.GetIntents())
+                if not path.exists(path.join(DIRECTORY_DATA, plugin_id)):
+                    mkdir(path.join(DIRECTORY_DATA, plugin_id))
+
+                log(f'Imported Plugin :: {plugin_id}')
+            except Exception as e:
+                log('Error while Importing', LOAD_FILE)
+                log(traceback.format_exc())
+        log('Done Loading Plugins\n')
+        log('Preparing Intents Inference')
+        if not path.exists(DIRECTORY_DATA_CORE_INTENTS_INFERENCE):
+            train_intents(plugin_intents,
+                          DIRECTORY_DATA_CORE_INTENTS_INFERENCE)
+        SetSingleton(SINGLETON_INTENTS_INFERENCE_ID,
+                     IntentInference(DIRECTORY_DATA_CORE_INTENTS_INFERENCE))
+        log('Done Preparing Intents Inference\n')
+        await self.loader.LoadCurrent(self)
 
     def StartWaitFollowUp(self):
         self.is_following_up = True
@@ -95,28 +104,24 @@ class Assistant(Singleton):
         self.is_processing_command = True
 
     def OnSkillEnd(self):
-        DisplayUiMessage('...')
         self.StopWaitFollowUp()
         self.is_processing_command = False
 
-    def DoSpeech(self, message, callback):
-        self.speaker.AddJob('speaker_tts', message, callback)
+    def DoResponse(msg):
+        gEmitter.emit(constants.EVENT_ON_ASSISTANT_RESPONSE, msg)
 
-    def OnVoiceProcessed(self, phrase: str, is_complete: bool, force_is_command=False):
-        if not self.is_processing_command:
-            DisplayUiMessage(phrase)
+    def OnPhrase(self, phrase: str, is_complete: bool, force_is_command=False):
         if self.is_following_up and is_complete:
-            gEmitter.emit('follow_up', phrase)
+            gEmitter.emit(constants.EVENT_ON_FOLLOWUP_MSG, phrase)
         if not self.is_processing_command and not self.is_following_up:
             if is_complete and (phrase.lower().strip().startswith(
-                    dynamic.wake_word) or force_is_command) and not self.waiting_for_command:
-                phrase = phrase.lower()[len(dynamic.wake_word):].strip()
+                    WAKE_WORD) or force_is_command) and not self.waiting_for_command:
+                phrase = phrase.lower()[len(WAKE_WORD):].strip()
                 if len(phrase) > 0:
                     self.RunAsync(self.TryStartSkill(phrase))
                 else:
                     self.waiting_for_command = True
-                    TextToSpeech("Yes?")
-                    DisplayUiMessage("Listening...")
+                    self.DoResponse("Yes?")
             elif is_complete and self.waiting_for_command:
                 if is_complete:
                     try:
@@ -125,24 +130,15 @@ class Assistant(Singleton):
                         log(e)
                     self.waiting_for_command = False
 
-    def OnVoiceStart(self):
-        TextToSpeech("Speech Recognition Active.")
-        DisplayUiMessage('...')
-        self.model_is_ready = True
-
     async def TryStartSkill(self, phrase):
         try:
-            phrase_intent, confidence = "skill_none", 0.5
-            parsed = ""  # await GetNluData(phrase)
+            parser = GetSingleton(SINGLETON_INTENTS_INFERENCE_ID)
 
-            if phrase_intent == "skill_none":
-                await TextToSpeech("I cannot answer that yet.", True)
-                return
+            conf, intent = parser.GetIntent(phrase)
 
             skills = GetSingleton('skills')
 
-            intent, confidence = parsed
-            if confidence >= 0.89 and intent in skills.keys():
+            if conf >= 0.8 and intent in skills.keys():
                 skill, reg = skills[intent]
                 match = re.match(reg, phrase, re.IGNORECASE)
                 log(match, reg)
@@ -150,7 +146,7 @@ class Assistant(Singleton):
                     await skill(SkillEvent(self, phrase), match.groups())
                     return
 
-            await TextToSpeech("I cannot answer that yet.", True)
+            gEmitter.emit(constants.EVENT_ON_PHRASE_PARSE_ERROR)
         except Exception as e:
             log(e)
             log(traceback.format_exc())

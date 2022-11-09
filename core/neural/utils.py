@@ -1,13 +1,15 @@
-import nltk
-import numpy as np
+from core.constants import DIRECTORY_DATA_CORE
 from nltk.stem.porter import PorterStemmer
-
-#nltk.download('punkt')
+import numpy as np
+from nltk import word_tokenize
+import nltk
+from os import path
 
 stemmer = PorterStemmer()
 
+
 def tokenize(sentence):
-    return nltk.word_tokenize(sentence)
+    return word_tokenize(sentence)
 
 
 def stem(word):

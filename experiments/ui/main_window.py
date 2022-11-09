@@ -1,6 +1,6 @@
 from os import getcwd, path
 import wx
-from core.constants import main_window_name, dynamic
+from core.constants_1 import main_window_name, dynamic
 from core.events import gEmitter
 from ui.visualizer import Visualizer
 from wx.html2 import WebView as WV

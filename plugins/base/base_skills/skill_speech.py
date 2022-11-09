@@ -1,5 +1,5 @@
 from core.decorators import Skill
-from core.utils import TextToSpeech
+from plugins.base.text_to_speech import TextToSpeech
 
 
 @Skill(["skill_self_say"], r"(?:(?:say|speak)\s?)?(.*)")

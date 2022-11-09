@@ -1,7 +1,7 @@
 {
-  "intents": [
+  "tags": [
     {
-      "intent": "skill_spotify_play",
+      "tag": "skill_spotify_play",
       "examples": [
         "play in the name of love",
         "play girls on boys",
@@ -13,7 +13,7 @@
       ]
     },
     {
-      "intent": "skill_spotify_pause",
+      "tag": "skill_spotify_pause",
       "examples": [
         "pause",
         "pause music",
@@ -21,21 +21,21 @@
       ]
     },
     {
-      "intent": "skill_spotify_resume",
+      "tag": "skill_spotify_resume",
       "examples": [
         "resume",
         "resume music"
       ]
     },
     {
-      "intent": "skill_spotify_skip",
+      "tag": "skill_spotify_skip",
       "examples": [
         "next song",
         "skip"
       ]
     },
     {
-      "intent": "skill_spotify_volume",
+      "tag": "skill_spotify_volume",
       "examples": [
         "music volume twenty five",
         "volume music ten percent",
@@ -44,7 +44,7 @@
       ]
     },
     {
-      "intent": "skill_app_open",
+      "tag": "skill_app_open",
       "examples": [
         "launch spotify",
         "open google",
@@ -61,7 +61,7 @@
       ]
     },
     {
-      "intent": "skill_app_close",
+      "tag": "skill_app_close",
       "examples": [
         "close spotify",
         "quit google",
@@ -74,7 +74,7 @@
       ]
     },
     {
-      "intent": "skill_arithmetic",
+      "tag": "skill_arithmetic",
       "examples": [
         "what is nine minus six",
         "math nine minus six",
@@ -83,7 +83,7 @@
       ]
     },
     {
-      "intent": "skill_schedule_add",
+      "tag": "skill_schedule_add",
       "examples": [
         "remind me to smoke weed at five am",
         "remind me to take a shit by twelve pm",
@@ -97,7 +97,7 @@
       ]
     },
     {
-      "intent": "skill_schedule_list",
+      "tag": "skill_schedule_list",
       "examples": [
         "what do i have on my schedule",
         "list my schedule",
@@ -107,15 +107,21 @@
       ]
     },
     {
-      "intent": "skill_web_search",
+      "tag": "skill_web_search",
       "examples": [
         "look up men in suits",
         "google balls in your jaw video",
-        "search for math answers"
+        "search for math answers",
+        "look up great pretender",
+        "google wacha cha cha",
+        "search gibrish ",
+        "look up men in suits",
+        "google man",
+        "search The quick brown fox jumps over the lazy dog"
       ]
     },
     {
-      "intent": "skill_self_say",
+      "tag": "skill_self_say",
       "examples": [
         "say wakanda forever",
         "speak sea shells and shit",
@@ -124,7 +130,7 @@
       ]
     },
     {
-      "intent": "skill_time",
+      "tag": "skill_time",
       "examples": [
         "what time is it",
         "what is the time",
@@ -132,7 +138,7 @@
       ]
     },
     {
-      "intent": "skill_self_maximize",
+      "tag": "skill_self_maximize",
       "examples": [
         "maximize your window",
         "maximize window",
@@ -140,7 +146,7 @@
       ]
     },
     {
-      "intent": "skill_self_minimize",
+      "tag": "skill_self_minimize",
       "examples": [
         "minimize your window",
         "minimize window",
@@ -148,7 +154,7 @@
       ]
     },
     {
-      "intent": "skill_self_restore",
+      "tag": "skill_self_restore",
       "examples": [
         "restore your window",
         "restore window",
@@ -156,7 +162,7 @@
       ]
     },
     {
-      "intent": "skill_affirm",
+      "tag": "skill_affirm",
       "examples": [
         "Yes",
         "sure",
@@ -164,7 +170,7 @@
       ]
     },
     {
-      "intent": "skill_reject",
+      "tag": "skill_reject",
       "examples": [
         "no",
         "nevermind",

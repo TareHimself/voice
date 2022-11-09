@@ -9,9 +9,17 @@ import time
 from core.threads import StartServer
 from core.events import gEmitter
 from core.assistant import Assistant
+import os
+
+d = os.path.join
 
 
-from core.assistant import Assistant
+def n(*args, **kwargs):
+    return os.path.normpath(d(*args, *kwargs))
+
+
+os.path.join = d
+
 assistant = Assistant()
 StartServer()
 

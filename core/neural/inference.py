@@ -1,12 +1,13 @@
 import torch
-from model import IntentsNeuralNet
-from nltk_utils import tokenize, bag_of_words
+from core.neural.model import IntentsNeuralNet
+from core.neural.utils import tokenize, bag_of_words
 
 
 class IntentInference:
     def __init__(self, model_path):
         self.data = torch.load(model_path)
-        self.model = IntentsNeuralNet(self.data['input'], self.data['hidden'], self.data['output'])
+        self.model = IntentsNeuralNet(
+            self.data['input'], self.data['hidden'], self.data['output'])
         self.model.load_state_dict(self.data['state'])
         self.model.eval()
 
@@ -17,7 +18,7 @@ class IntentInference:
         output = self.model(x)
         _, predicated = torch.max(output, dim=1)
 
-        probs = torch.softmax(output,dim=1)
+        probs = torch.softmax(output, dim=1)
         prob = probs[0][predicated.item()]
 
-        return prob.item() , self.data['tags'][predicated.item()]
+        return prob.item(), self.data['tags'][predicated.item()]

@@ -9,6 +9,7 @@ from typing import Callable, Union
 from core.events import gEmitter
 from core.logger import log
 from core.threads import StartTimer, StopTimer
+from core import constants
 
 
 async def GetNluData(phrase):
@@ -26,34 +27,17 @@ async def GetNluData(phrase):
         return None
 
 
-def TextToSpeech(msg, waitForFinish=False) -> Union[None, asyncio.Future]:
-    if not waitForFinish:
-        gEmitter.emit('send_speech_voice', msg, None)
-        return
-
-    loop = asyncio.get_event_loop()
-    task_return = asyncio.Future()
-
-    def OnFinish():
-        nonlocal task_return
-        loop.call_soon_threadsafe(task_return.set_result, None)
-
-    gEmitter.emit('send_speech_voice', msg, OnFinish)
-
-    return task_return
-
-
 def DisplayUiMessage(msg):
     log(msg)
     gEmitter.emit('send_speech_text', msg, True)
 
 
 def EndSkill():
-    gEmitter.emit('send_skill_end')
+    gEmitter.emit(constants.EVENT_ON_SKILL_END)
 
 
 def StartSkill():
-    gEmitter.emit('send_skill_start')
+    gEmitter.emit(constants.EVENT_ON_SKILL_START)
 
 
 def GetFollowUp(timeout_secs=0):
@@ -68,23 +52,23 @@ def GetFollowUp(timeout_secs=0):
 
         if status == 0:
             StopTimer(task_id)
-            gEmitter.off('follow_up', OnResultReceived)
+            gEmitter.off(constants.EVENT_ON_FOLLOWUP_MSG, OnResultReceived)
             loop.call_soon_threadsafe(task_return.set_result, msg)
-            gEmitter.emit('stop_follow_up')
+            gEmitter.emit(constants.EVENT_ON_FOLLOWUP_END)
             status = 1
 
     def OnTimeout():
         nonlocal status
         nonlocal task_return
         if status == 0:
-            gEmitter.off('follow_up', OnResultReceived)
+            gEmitter.off(constants.EVENT_ON_FOLLOWUP_MSG, OnResultReceived)
             loop.call_soon_threadsafe(task_return.set_result, None)
-            gEmitter.emit('stop_follow_up')
+            gEmitter.emit(constants.EVENT_ON_FOLLOWUP_END)
             status = 1
 
-    gEmitter.on('follow_up', OnResultReceived)
+    gEmitter.on(constants.EVENT_ON_FOLLOWUP_MSG, OnResultReceived)
 
-    gEmitter.emit('start_follow_up')
+    gEmitter.emit(constants.EVENT_ON_FOLLOWUP_START)
     if timeout_secs > 0:
         StartTimer(timer_id=task_id, length=timeout_secs, callback=OnTimeout)
 

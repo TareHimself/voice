@@ -4,7 +4,7 @@ import pyautogui
 import pyperclip as pc
 from os import system
 
-from core.utils import TextToSpeech
+from plugins.base.text_to_speech import TextToSpeech
 
 
 @Skill(["skill_app_open"], r"(?:(?:close|open|quit|launch|exit)\s?)?(.*)")
