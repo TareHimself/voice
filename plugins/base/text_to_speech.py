@@ -51,7 +51,7 @@ class TTSThread(ThreadEmitter):
             self.ProcessJobs()
 
 
-def TextToSpeech(msg, waitForFinish=False) -> Union[None, asyncio.Future]:
+async def TextToSpeech(msg, waitForFinish=False):
     if not waitForFinish:
         gEmitter.emit('base-do-speech', msg, None)
         return
@@ -65,7 +65,8 @@ def TextToSpeech(msg, waitForFinish=False) -> Union[None, asyncio.Future]:
 
     gEmitter.emit('base-do-speech', msg, OnFinish)
 
-    return task_return
+    await task_return
+    return
 
 
 @AssistantLoader(loader_id='base-tts')
@@ -81,7 +82,7 @@ async def LoadTTS():
         tts.AddJob('tts', msg, callback)
 
     gEmitter.on(constants.EVENT_ON_PHRASE_PARSE_ERROR,
-                lambda: TextToSpeech('I cannot answer that yet.'))
+                lambda: asyncio.run(TextToSpeech('I cannot answer that yet.')))
     gEmitter.on('base-do-speech', SendSpeech)
 
-    TextToSpeech('Base Speech Active.')
+    await TextToSpeech('Base Speech Active.')

@@ -19,6 +19,7 @@ DIRECTORY_DATA_CORE_INTENTS_INFERENCE = path.normpath(
 SINGLETON_SERVER_ID = "singleton-server"
 SINGLETON_ASSISTANT_ID = "singleton-assistant"
 SINGLETON_MAIN_LOADER_ID = "singleton-main-loader"
+SINGLETON_SKILL_MANAGER_ID = "singleton-skill-manager"
 SINGLETON_INTENTS_INFERENCE_ID = "singleton-intents-inference"
 
 WAKE_WORD = 'alice'

@@ -10,6 +10,7 @@ from core.events import gEmitter
 from core.logger import log
 from core.threads import StartTimer, StopTimer
 from core import constants
+from core.decorators import GetSingleton
 
 
 async def GetNluData(phrase):
@@ -106,3 +107,9 @@ async def GetFileHash(dir: str, block_size=65536):
     result = await task_return
 
     return result
+
+
+async def TryStartSkill(phrase) -> list:
+    assistant = GetSingleton(constants.SINGLETON_ASSISTANT_ID)
+    return await assistant.TryStartSkill(phrase)
+

@@ -7,7 +7,7 @@ const HEADERS_TO_NOT_FORWARD = ['content-length']
 async function ProxyRequest(req) {
 
 	try {
-		const actual_url = `http://127.1.0.0:24559${req.originalUrl.substring("/assistant".length)}`
+		const actual_url = `http://localhost:24559${req.originalUrl.substring("/assistant".length)}`
 
 		const headers = Array.from(Object.entries(req.headers)).reduce((obj, [h, v]) => {
 			if (!HEADERS_TO_NOT_FORWARD.includes(h.toLowerCase())) {
@@ -16,7 +16,6 @@ async function ProxyRequest(req) {
 
 			return obj
 		}, {})
-
 
 		axios({
 			method: req.method.toLowerCase(),

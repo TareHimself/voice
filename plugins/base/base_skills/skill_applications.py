@@ -3,13 +3,14 @@ from core.decorators import Skill
 import pyautogui
 import pyperclip as pc
 from os import system
+from core.assistant import SkillEvent
+from core.logger import log
 
 from plugins.base.text_to_speech import TextToSpeech
 
 
 @Skill(["skill_app_open"], r"(?:(?:close|open|quit|launch|exit)\s?)?(.*)")
-async def LaunchApplication(e, args):
-
+async def LaunchApplication(e: SkillEvent, args):
     if platform.system().lower() == 'darwin':
         system('open -a {}.app'.format(args[0]))
     else:
@@ -18,10 +19,11 @@ async def LaunchApplication(e, args):
         pyautogui.hotkey('ctrl', 'v')
         pyautogui.press("enter")
 
-    TextToSpeech('Launching {}.'.format(args[0]))
+    await e.Respond('Launching {}.'.format(args[0]))
 
 
 @Skill(["skill_app_close"], r"(?:(?:close|open|quit|launch|exit)\s?)?(.*)")
-async def CloseApplication(e, args):
+async def CloseApplication(e: SkillEvent, args):
     system('taskkill /F /FI "WindowTitle eq {}" /T'.format(args[0]))
-    TextToSpeech('Closed {}.'.format(args[0]))
+
+    await e.Respond('Closed {}.'.format(args[0]))

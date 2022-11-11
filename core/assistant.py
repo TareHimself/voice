@@ -1,4 +1,4 @@
-import asyncio
+import uuid
 import importlib
 import core.decorators
 from core import constants
@@ -13,15 +13,27 @@ import asyncio
 import importlib.util
 import traceback
 from pytz import timezone
-from core.constants import DIRECTORY_PLUGINS, DIRECTORY_DATA, SINGLETON_MAIN_LOADER_ID, SINGLETON_INTENTS_INFERENCE_ID, DIRECTORY_DATA_CORE_INTENTS_INFERENCE, SINGLETON_ASSISTANT_ID, WAKE_WORD
+from core.constants import \
+    DIRECTORY_PLUGINS, \
+    DIRECTORY_DATA, \
+    SINGLETON_MAIN_LOADER_ID, \
+    SINGLETON_INTENTS_INFERENCE_ID, \
+    DIRECTORY_DATA_CORE_INTENTS_INFERENCE, \
+    SINGLETON_ASSISTANT_ID, \
+    SINGLETON_SKILL_MANAGER_ID, \
+    WAKE_WORD
 from core.neural.train import train_intents
 from core.neural.inference import IntentInference
 
 
 class SkillEvent:
-    def __init__(self, assistant, phrase) -> None:
+    def __init__(self, skill_id, assistant, phrase) -> None:
+        self.id = skill_id
         self.phrase = phrase
         self.assistant = assistant
+
+    async def Respond(self, msg: str):
+        await self.assistant.Respond(msg)
 
 
 class Assistant(Singleton):
@@ -97,55 +109,69 @@ class Assistant(Singleton):
     def StopWaitFollowUp(self):
         self.is_following_up = False
 
-    def OnSkillStart(self):
+    def OnSkillStart(self, _):
         self.is_processing_command = True
 
-    def OnSkillEnd(self):
+    def OnSkillEnd(self, _):
         self.StopWaitFollowUp()
         self.is_processing_command = False
 
-    def DoResponse(self, msg):
+    async def Respond(self, msg: str):
         gEmitter.emit(constants.EVENT_ON_ASSISTANT_RESPONSE, msg)
 
     def OnPhrase(self, phrase: str, is_complete: bool, force_is_command=False):
         if self.is_following_up and is_complete:
             gEmitter.emit(constants.EVENT_ON_FOLLOWUP_MSG, phrase)
+
         if not self.is_processing_command and not self.is_following_up:
-            if is_complete and (phrase.lower().strip().startswith(
-                    WAKE_WORD) or force_is_command) and not self.waiting_for_command:
+            has_wake_word = phrase.lower().strip().startswith(
+                WAKE_WORD)
+            if is_complete and (has_wake_word or force_is_command) and not self.waiting_for_command:
                 phrase = phrase.lower()[len(WAKE_WORD):].strip()
-                if len(phrase) > 0:
+                is_possible_command = len(phrase) > 0
+
+                if is_possible_command:
+                    # Try To start the associated skill
                     self.RunAsync(self.TryStartSkill(phrase))
                 else:
+                    # Put the assistant into waiting mode
                     self.waiting_for_command = True
-                    self.DoResponse("Yes?")
+                    self.Respond("Yes?")
             elif is_complete and self.waiting_for_command:
                 if is_complete:
-                    try:
-                        self.RunAsync(self.TryStartSkill(phrase))
-                    except Exception as e:
-                        log(e)
+                    # Try To start the associated skill since we are already in waiting mode
+                    self.RunAsync(self.TryStartSkill(phrase))
                     self.waiting_for_command = False
 
-    async def TryStartSkill(self, phrase):
+    async def TryStartSkill(self, phrase) -> list:
         try:
             parser = GetSingleton(SINGLETON_INTENTS_INFERENCE_ID)
 
             conf, intent = parser.GetIntent(phrase)
 
             log(phrase, conf, intent)
-            skills = GetSingleton('skills')
+            skill_manger = GetSingleton(SINGLETON_SKILL_MANAGER_ID)
 
-            if conf >= 0.8 and intent in skills.keys():
-                skill, reg = skills[intent]
-                match = re.match(reg, phrase, re.IGNORECASE)
-                log(match, reg)
-                if match:
-                    await skill(SkillEvent(self, phrase), match.groups())
-                    return
+            if conf >= 0.8 and skill_manger.HasIntent(intent):
+                skills = skill_manger.GetSkillsForIntent(intent)
+                ids = []
+
+                for func, reg in skills:
+                    match = re.match(reg, phrase, re.IGNORECASE)
+
+                    if match:
+                        log(func)
+                        skill_id = f"skill-{str(uuid.uuid4())}"
+
+                        asyncio.create_task(func(SkillEvent(skill_id, self, phrase), match.groups()))
+                        ids.append(skill_id)
+
+                log(f'Phrase {phrase} Matched {len(ids)} Skills:',ids)
+                return ids if len(ids) > 0 else None
 
             gEmitter.emit(constants.EVENT_ON_PHRASE_PARSE_ERROR)
         except Exception as e:
             log(e)
             log(traceback.format_exc())
-        return
+
+        return None

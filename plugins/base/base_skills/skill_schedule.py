@@ -5,7 +5,7 @@ from core.decorators import Skill
 from datetime import datetime
 from .scheduled_event import ScheduledEvent
 from core.utils import GetFollowUp, GetNluData
-from text_to_speech import TextToSpeech
+from core.assistant import SkillEvent
 from core.str2time import stringToTime
 from core.db import db
 from core.decorators import AssistantLoader
@@ -40,7 +40,7 @@ async def Intialize(va):
 
 
 @Skill(["skill_schedule_add"], r"(?:remind (?:me (?:to )))?([a-zA-Z ]+?)(?:\sin(?: a| an)?|\sat)\s(.*)")
-async def ScheduleEvent(e, args):
+async def ScheduleEvent(e: SkillEvent, args):
     tz = e.assistant.tz
     task, time = args
     end_time = stringToTime(time, tz)
@@ -56,18 +56,18 @@ async def ScheduleEvent(e, args):
         ScheduledEvent({'end_at': end_time, "msg": task,
                        "id": event_id}, tz)
 
-        TextToSpeech('Reminder added.')
+        await e.Respond('Reminder added.')
     else:
-        TextToSpeech('I am unable to parse the time.')
+        await e.Respond('I am unable to parse the time.')
 
 
 @Skill(["skill_schedule_list"])
-async def ListSchedule(e, args):
+async def ListSchedule(e: SkillEvent, args):
     items = db.execute("SELECT * FROM skill_schedule").fetchall()
-    await TextToSpeech('You have {} items scheduled  .'.format(num2wrd(len(items))), True)
+    await e.Respond('You have {} items scheduled  .'.format(num2wrd(len(items))), True)
     await asyncio.sleep(1)
     if len(items) > 0:
-        await TextToSpeech('Would you like me to list them ?.', True)
+        await e.Respond('Would you like me to list them ?.', True)
         answer = await GetFollowUp(10)
         if answer:
             nlu_response = await GetNluData(answer)
@@ -75,4 +75,4 @@ async def ListSchedule(e, args):
                 intent, confidence = nlu_response
                 if intent == "skill_affirm":
                     for i in range(len(items)):
-                        await TextToSpeech('{}. {}. At {}.'.format(num2wrd(i + 1), items[i][1], TimeToSttText(datetime.fromisoformat(items[i][2]))), True)
+                        await e.Respond('{}. {}. At {}.'.format(num2wrd(i + 1), items[i][1], TimeToSttText(datetime.fromisoformat(items[i][2]))), True)

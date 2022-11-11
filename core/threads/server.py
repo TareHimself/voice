@@ -1,18 +1,12 @@
-# V3
 import asyncio
-import base64
 from subprocess import Popen
 import sys
 from threading import Thread
-import aiohttp
 import tornado.web
-from core.events import ThreadEmitter
-from uuid import uuid4
-# Third-party library
 from aiohttp import web
 from core.logger import log
 from core.singletons import GetSingleton, Singleton
-from core.threads.timer import StartTimer
+from sys import platform
 from core.events import gEmitter
 from core.constants import SINGLETON_SERVER_ID
 
@@ -109,11 +103,10 @@ def CreateProxiedBody(body):
 
 
 def _start_proxy():
-    proxy_process = Popen(['npm', 'start'], stdout=sys.stdout,
+    proxy_process = Popen(['npm', 'start'] if platform == 'win32' else ['npm start'], stdout=sys.stdout,
                           stderr=sys.stderr, shell=True)
 
     def end_process(sig, frame):
-        #Popen("TASKKILL /F /PID {pid} /T".format(pid=proxy_process.pid))
         proxy_process.terminate()
 
     gEmitter.on('terminate', end_process)
