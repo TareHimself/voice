@@ -18,9 +18,6 @@ from core.neural.train import train_intents
 from core.neural.inference import IntentInference
 
 
-
-
-
 class SkillEvent:
     def __init__(self, assistant, phrase) -> None:
         self.phrase = phrase
@@ -107,7 +104,7 @@ class Assistant(Singleton):
         self.StopWaitFollowUp()
         self.is_processing_command = False
 
-    def DoResponse(msg):
+    def DoResponse(self, msg):
         gEmitter.emit(constants.EVENT_ON_ASSISTANT_RESPONSE, msg)
 
     def OnPhrase(self, phrase: str, is_complete: bool, force_is_command=False):
@@ -136,7 +133,7 @@ class Assistant(Singleton):
 
             conf, intent = parser.GetIntent(phrase)
 
-            log(conf, intent)
+            log(phrase, conf, intent)
             skills = GetSingleton('skills')
 
             if conf >= 0.8 and intent in skills.keys():
