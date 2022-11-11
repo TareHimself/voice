@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import tornado.web
 from datetime import datetime, timedelta
@@ -16,6 +17,7 @@ from core.threads.server import CreateProxiedBody
 from os import path, mkdir
 from constants import PLUGIN_ID
 from plugins.base.text_to_speech import TextToSpeech
+from core.events import gEmitter
 
 SPOTIFY_PATH = path.join(DIRECTORY_DATA, PLUGIN_ID, 'spotify')
 
@@ -43,9 +45,12 @@ async def SetSpotifyAuth():
 
     if not path.exists(SPOTIFY_CONFIG_PATH):
         config = {
-            'id': '',
-            'secret': '',
-            'uri': '',
+            'id': "",  # str(input('Please input your spotify client id: ')),
+            # str(input('Please input your spotify client secrete: ')),
+            'secret': "",
+            # str(input('Please input your spotify callback url: ')),
+            'uri': "",
+            'scope': "user-modify-playback-state"
         }
         with open(SPOTIFY_CONFIG_PATH, 'w') as f:
             f.write(json.dumps(config, indent=2))
@@ -76,56 +81,75 @@ def OnSpotifyAuthReceived(auth):
             json.dump(spotify_auth, outfile, indent=4)
 
 
-@ServerHandler(r'/spotify')
-class SpotifyAuthHandler(tornado.web.RequestHandler):
-    async def get(self):
-        self.write(f"{self.get_query_argument('code')}")
-
-
 # async def OnSpotifyAuth(request: web.Request):
 #     code = request.rel_url.query['code']
-#     url = "https://accounts.spotify.com/api/token"
 
-#     payload = {
-#         "code": code,
-#         "redirect_uri": config['uri'],
-#         'grant_type': "authorization_code"
-#     }
-
-#     auth_code = config['id'] + \
-#         ':' + config['secret']
-#     headers = {
-#         "Authorization": "Basic " + base64.urlsafe_b64encode((auth_code).encode('ascii')).decode('ascii'),
-#         'Content-Type': 'application/x-www-form-urlencoded'}
-
-#     async with aiohttp.ClientSession() as session:
-#         async with session.post(url=url, headers=headers, data=payload) as resp:
-#             auth_data = await resp.json()
-#             OnSpotifyAuthReceived(auth_data)
 
 #     return CreateProxiedBody("Done")
 
+@ServerHandler(r'/spotify')
+class SpotifyAuthHandler(tornado.web.RequestHandler):
+    async def get(self):
+        global config
+        code = self.get_query_argument('code', None)
 
-def ValidateSpotifyAuth():
+        self.finish("recieved")
+        url = "https://accounts.spotify.com/api/token"
+
+        payload = {
+            "code": code,
+            "redirect_uri": config['uri'],
+            'grant_type': "authorization_code"
+        }
+
+        auth_code = config['id'] + \
+            ':' + config['secret']
+        headers = {
+            "Authorization": "Basic " + base64.urlsafe_b64encode((auth_code).encode('ascii')).decode('ascii'),
+            'Content-Type': 'application/x-www-form-urlencoded'}
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url=url, headers=headers, data=payload) as resp:
+                auth_data = await resp.json()
+                gEmitter.emit('plugin_base_on_spotify_auth', auth_data)
+
+
+def GetSpotifyAuth():
+    loop = asyncio.get_event_loop()
+    global config
+    task_return = asyncio.Future()
+    authorize_url = "https://accounts.spotify.com/authorize?response_type=code&" + urlencode(
+        {'client_id': config['id'], 'scope': config['scope'],
+         'redirect_uri': config['uri']})
+
+    def OnAuthRecieved(auth):
+        loop.call_soon_threadsafe(task_return.set_result, auth)
+
+    gEmitter.once('plugin_base_on_spotify_auth', OnAuthRecieved)
+
+    webbrowser.open(authorize_url, new=2)
+
+    return task_return
+
+
+async def ValidateSpotifyAuth():
     global spotify_auth
     global spotify_auth_refresh
-    if not spotify_auth_refresh or 'spotify' not in config.keys():
-        return False
-    elif 'spotify' in config.keys():
-        if not path.exists(SPOTIFY_AUTH_PATH):
-            authorize_url = "https://accounts.spotify.com/authorize?response_type=code&" + urlencode(
-                {'client_id': config['spotify']['client_id'], 'scope': config['spotify']['scope'],
-                 'redirect_uri': config['spotify']['redirect_uri']})
-            new = 2  # not really necessary, may be default on most modern browsers
-            server.AddJob('add_spotify_callback', OnSpotifyAuthReceived)
-            webbrowser.open(authorize_url, new=new)
-        else:
-            with open(SPOTIFY_AUTH_PATH, "r") as infile:
-                spotify_auth = json.load(infile)
-                spotify_auth_refresh = datetime.fromisoformat(
-                    spotify_auth['expires_at'])
-                ValidateSpotifyAuth()
-                UpdateHeader(spotify_auth)
+    if not spotify_auth:
+        spotify_auth = await GetSpotifyAuth()
+        spotify_auth_refresh = datetime.utcnow(
+        ) + timedelta(seconds=spotify_auth['expires_in'])
+        spotify_auth['expires_at'] = spotify_auth_refresh.isoformat()
+        del spotify_auth['expires_in']
+        UpdateHeader(spotify_auth)
+        with open(SPOTIFY_AUTH_PATH, "w") as outfile:
+            json.dump(spotify_auth, outfile, indent=4)
+
+    if not spotify_auth_refresh:
+        spotify_auth_refresh = datetime.fromisoformat(
+            spotify_auth['expires_at'])
+        UpdateHeader(spotify_auth)
+        return await ValidateSpotifyAuth()
 
     utc_now = datetime.utcnow()
     if spotify_auth_refresh < utc_now:
@@ -155,7 +179,7 @@ def ValidateSpotifyAuth():
 
 def SpotifySkillValidation(f):
     async def inner(*args, **kwargs):
-        if ValidateSpotifyAuth():
+        if await ValidateSpotifyAuth():
             await f(*args, **kwargs)
         return
 

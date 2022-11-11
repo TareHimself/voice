@@ -21,5 +21,6 @@ SINGLETON_ASSISTANT_ID = "singleton-assistant"
 SINGLETON_MAIN_LOADER_ID = "singleton-main-loader"
 SINGLETON_INTENTS_INFERENCE_ID = "singleton-intents-inference"
 
+WAKE_WORD = 'alice'
 if not path.exists(DIRECTORY_DATA_CORE):
     mkdir(DIRECTORY_DATA_CORE)

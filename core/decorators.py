@@ -1,14 +1,14 @@
 import traceback
 import uuid
 import inspect
-from core.constants import SINGLETON_SERVER_ID
+from core.constants import SINGLETON_SERVER_ID, SINGLETON_MAIN_LOADER_ID,SINGLETON_ASSISTANT_ID
 from core.logger import log
 from core.singletons import GetSingleton, Singleton, SetSingleton
 
 
 class MainLoader(Singleton):
     def __init__(self):
-        super().__init__(id="main-loader")
+        super().__init__(id=SINGLETON_MAIN_LOADER_ID)
         self.loaders = {}
 
     def __len__(self):
@@ -64,7 +64,7 @@ def Skill(intents=[], params_regex=r".*"):
 
     def inner(func):
         async def wrapper(event, args):
-            va = GetSingleton('assistant')
+            va = GetSingleton(SINGLETON_ASSISTANT_ID)
             va.OnSkillStart()
             try:
                 await func(event, args)

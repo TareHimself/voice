@@ -13,12 +13,12 @@ import asyncio
 import importlib.util
 import traceback
 from pytz import timezone
-from core.constants import DIRECTORY_PLUGINS, DIRECTORY_DATA, DIRECTORY_DATA_CORE, SINGLETON_INTENTS_INFERENCE_ID, DIRECTORY_DATA_CORE_INTENTS_INFERENCE
+from core.constants import DIRECTORY_PLUGINS, DIRECTORY_DATA, SINGLETON_MAIN_LOADER_ID, SINGLETON_INTENTS_INFERENCE_ID, DIRECTORY_DATA_CORE_INTENTS_INFERENCE, SINGLETON_ASSISTANT_ID, WAKE_WORD
 from core.neural.train import train_intents
 from core.neural.inference import IntentInference
 
 
-WAKE_WORD = 'alice'
+
 
 
 class SkillEvent:
@@ -30,7 +30,7 @@ class SkillEvent:
 class Assistant(Singleton):
 
     def __init__(self):
-        super().__init__(id='assistant')
+        super().__init__(id=SINGLETON_ASSISTANT_ID)
         self.model_is_ready = False
         self.is_processing_command = False
         self.waiting_for_command = False
@@ -38,7 +38,7 @@ class Assistant(Singleton):
         self.plugins = {}
         self.tz = timezone('US/Eastern')
         self.loop = CreateAsyncLoop()
-        self.loader = GetSingleton("main-loader")
+        self.loader = GetSingleton(SINGLETON_MAIN_LOADER_ID)
         gEmitter.on(constants.EVENT_ON_FOLLOWUP_START, self.StartWaitFollowUp)
         gEmitter.on(constants.EVENT_ON_FOLLOWUP_END, self.StopWaitFollowUp)
         gEmitter.on(constants.EVENT_ON_SKILL_START, self.OnSkillStart)
@@ -136,6 +136,7 @@ class Assistant(Singleton):
 
             conf, intent = parser.GetIntent(phrase)
 
+            log(conf, intent)
             skills = GetSingleton('skills')
 
             if conf >= 0.8 and intent in skills.keys():

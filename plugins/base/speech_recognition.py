@@ -122,7 +122,6 @@ async def DownloadAndStartModel(va):
                   MODEL_DOWNLOAD_PATH)
 
     def OnCallback(phrase, is_complete):
-        log(phrase, is_complete)
         gEmitter.emit(constants.EVENT_SEND_PHRASE_TO_ASSISTANT,
                       phrase, is_complete)
 
