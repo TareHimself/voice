@@ -66,7 +66,7 @@ class SpeechRecognitionThread(ThreadEmitter):
                 if len(result) > 0:
                     self.callback(result, False)
 
-    def HandleJob(self, job: str, *args, **kwargs):
+    def handle_job(self, job: str, *args, **kwargs):
         if job == 'toggle':
             self.bShouldProcessData = args[0]
 

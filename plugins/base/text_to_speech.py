@@ -10,6 +10,7 @@ import sounddevice as sd
 from core.events import ThreadEmitter
 from core.logger import log
 from core.constants import DIRECTORY_DATA
+from core.numwrd import num2wrd
 from plugins.base.constants import PLUGIN_ID
 device = torch.device('cpu')
 torch.set_num_threads(8)
@@ -28,7 +29,7 @@ class TTSThread(ThreadEmitter):
         super().__init__()
         self.model = None
 
-    def DoTTS(self, text, callback):
+    def do_tts(self, text, callback):
         if self.model:
             audio = self.model.apply_tts(text=text,
                                          speaker=TTS_SPEAKER,
@@ -39,19 +40,31 @@ class TTSThread(ThreadEmitter):
             else:
                 sd.play(audio, SAMPLE_RATE)
 
-    def HandleJob(self, job: str, *args, **kwargs):
+    def handle_job(self, job: str, *args, **kwargs):
         if job == 'tts':
-            self.DoTTS(*args, *kwargs)
+            self.do_tts(*args, *kwargs)
 
     def run(self):
         self.model = torch.package.PackageImporter(
             TTS_DIR).load_pickle("tts_models", "model")
         self.model.to(device)
         while True:
-            self.ProcessJobs()
+            self.process_jobs()
 
 
-async def TextToSpeech(msg, waitForFinish=False):
+def text_to_speech_text(text: str):
+    text = text.replace(':', ' ').replace(':', ' ')
+    new_str = ""
+    for token in text.split():
+        if token.isnumeric():
+            new_str += f" {num2wrd(token)}"
+        else:
+            new_str += f" {token}"
+
+    return new_str.strip()
+
+
+async def text_to_speech(msg, waitForFinish=False):
     if not waitForFinish:
         gEmitter.emit('base-do-speech', msg, None)
         return
@@ -70,7 +83,7 @@ async def TextToSpeech(msg, waitForFinish=False):
 
 
 @AssistantLoader(loader_id='base-tts')
-async def LoadTTS():
+async def initialize_tts():
     if not os.path.isfile(TTS_DIR):
         torch.hub.download_url_to_file(TTS_URL,
                                        TTS_DIR)
@@ -79,10 +92,12 @@ async def LoadTTS():
     tts.start()
 
     def SendSpeech(msg, callback):
-        tts.AddJob('tts', msg, callback)
+        tts.add_job('tts', msg, callback)
 
-    gEmitter.on(constants.EVENT_ON_PHRASE_PARSE_ERROR,
-                lambda: asyncio.run(TextToSpeech('I cannot answer that yet.')))
+    async def OnParseError():
+        await text_to_speech('I cannot answer that yet.')
+
+    gEmitter.on(constants.EVENT_ON_PHRASE_PARSE_ERROR, OnParseError)
     gEmitter.on('base-do-speech', SendSpeech)
 
-    await TextToSpeech('Base Speech Active.')
+    await text_to_speech('Base Speech Active.')

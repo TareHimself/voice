@@ -15,6 +15,6 @@ def GetId():
     return PLUGIN_ID
 
 
-def GetIntents():
+def get_intents():
     with open(INTENTS_PATH, 'r') as f:
         return json.load(f)['tags']

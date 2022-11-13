@@ -1,20 +1,21 @@
 import asyncio
 from uuid import uuid4
+from core.assistant import Assistant
 from core.numwrd import num2wrd
 from core.decorators import Skill
 from datetime import datetime
 from .scheduled_event import ScheduledEvent
-from core.utils import GetFollowUp, GetNluData
+from core.utils import parse_phrase
 from core.assistant import SkillEvent
-from core.str2time import stringToTime
+from core.str2time import string_to_time
 from core.db import db
 from core.decorators import AssistantLoader
 from core.logger import log
-from .utils import TimeToSttText
+from .utils import time_to_stt_text
 
 
 @AssistantLoader
-async def Intialize(va):
+async def initialize(va: Assistant):
     log('Generating Schedules Database')
     cur = db.cursor()
     cur.execute('''
@@ -30,7 +31,7 @@ async def Intialize(va):
         time = datetime.fromisoformat(time)
 
         if time > datetime.now(va.tz):
-            ScheduledEvent({'end_at': time, "msg": msg, "id": event_id})
+            ScheduledEvent({'end_at': time, "msg": msg, "id": event_id}, va.tz)
         else:
             cur.execute("DELETE FROM skill_schedule WHERE id=?", [event_id])
 
@@ -40,10 +41,10 @@ async def Intialize(va):
 
 
 @Skill(["skill_schedule_add"], r"(?:remind (?:me (?:to )))?([a-zA-Z ]+?)(?:\sin(?: a| an)?|\sat)\s(.*)")
-async def ScheduleEvent(e: SkillEvent, args):
+async def schedule_event(e: SkillEvent, args: list):
     tz = e.assistant.tz
     task, time = args
-    end_time = stringToTime(time, tz)
+    end_time = string_to_time(time, tz)
 
     if end_time:
         event_id = str(uuid4())
@@ -56,23 +57,28 @@ async def ScheduleEvent(e: SkillEvent, args):
         ScheduledEvent({'end_at': end_time, "msg": task,
                        "id": event_id}, tz)
 
-        await e.Respond('Reminder added.')
+        await e.context.handle_response('Reminder added.')
     else:
-        await e.Respond('I am unable to parse the time.')
+        await e.context.handle_response('I am unable to parse the time.')
 
 
 @Skill(["skill_schedule_list"])
-async def ListSchedule(e: SkillEvent, args):
+async def list_schedule(e: SkillEvent, args: list):
     items = db.execute("SELECT * FROM skill_schedule").fetchall()
-    await e.Respond('You have {} items scheduled  .'.format(num2wrd(len(items))), True)
+
+    await e.context.handle_response('You have {} items scheduled.'.format(num2wrd(len(items))))
     await asyncio.sleep(1)
     if len(items) > 0:
-        await e.Respond('Would you like me to list them ?.', True)
-        answer = await GetFollowUp(10)
+        await e.context.handle_response('Would you like me to list them ?')
+
+        answer = await e.context.get_followup(10)
+
+        log("ANSWER FROM FOLLOWUP", answer)
         if answer:
-            nlu_response = await GetNluData(answer)
+            nlu_response = await parse_phrase(answer)
+            log('NLU', nlu_response)
             if nlu_response:
-                intent, confidence = nlu_response
+                confidence, intent = nlu_response
                 if intent == "skill_affirm":
                     for i in range(len(items)):
-                        await e.Respond('{}. {}. At {}.'.format(num2wrd(i + 1), items[i][1], TimeToSttText(datetime.fromisoformat(items[i][2]))), True)
+                        await e.context.handle_response('{}. {}. At {}.'.format(num2wrd(i + 1), items[i][1], time_to_stt_text(datetime.fromisoformat(items[i][2]))))

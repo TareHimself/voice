@@ -8,75 +8,32 @@ from threading import Thread
 from typing import Callable, Union
 from core.events import gEmitter
 from core.logger import log
-from core.threads import StartTimer, StopTimer
+from core.threads import start_timer, stop_timer
 from core import constants
-from core.decorators import GetSingleton
+from core.decorators import get_singleton
+from core.assistant import AssistantContext
 
 
-async def GetNluData(phrase):
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get("https://proxy.oyintare.dev/nlu/parse?q={}".format(phrase)) as resp:
-                nlu_response = await resp.json()
-                log(nlu_response)
-                if len(nlu_response['error']):
-                    return None
+async def parse_phrase(phrase):
+    parser = get_singleton(constants.SINGLETON_INTENTS_INFERENCE_ID)
 
-                return [nlu_response['data']['intent']['name'], nlu_response['data']['intent']['confidence']]
-    except aiohttp.ClientConnectorError as e:
-        log(e)
-        return None
+    return parser.get_intent(phrase)
 
 
-def DisplayUiMessage(msg):
+def display_ui_message(msg):
     log(msg)
     gEmitter.emit('send_speech_text', msg, True)
 
 
-def EndSkill():
+def end_skill():
     gEmitter.emit(constants.EVENT_ON_SKILL_END)
 
 
-def StartSkill():
+def start_skill():
     gEmitter.emit(constants.EVENT_ON_SKILL_START)
 
 
-def GetFollowUp(timeout_secs=0):
-    loop = asyncio.get_event_loop()
-    task_return = asyncio.Future()
-    task_id = uuid.uuid1()
-    status = 0
-
-    def OnResultReceived(msg):
-        nonlocal status
-        nonlocal task_return
-
-        if status == 0:
-            StopTimer(task_id)
-            gEmitter.off(constants.EVENT_ON_FOLLOWUP_MSG, OnResultReceived)
-            loop.call_soon_threadsafe(task_return.set_result, msg)
-            gEmitter.emit(constants.EVENT_ON_FOLLOWUP_END)
-            status = 1
-
-    def OnTimeout():
-        nonlocal status
-        nonlocal task_return
-        if status == 0:
-            gEmitter.off(constants.EVENT_ON_FOLLOWUP_MSG, OnResultReceived)
-            loop.call_soon_threadsafe(task_return.set_result, None)
-            gEmitter.emit(constants.EVENT_ON_FOLLOWUP_END)
-            status = 1
-
-    gEmitter.on(constants.EVENT_ON_FOLLOWUP_MSG, OnResultReceived)
-
-    gEmitter.emit(constants.EVENT_ON_FOLLOWUP_START)
-    if timeout_secs > 0:
-        StartTimer(timer_id=task_id, length=timeout_secs, callback=OnTimeout)
-
-    return task_return
-
-
-def DownloadFile(url: str, OnProgress: Callable[[int, int], None] = lambda t, p: None):
+def download_file(url: str, OnProgress: Callable[[int, int], None] = lambda t, p: None):
     f = BytesIO()
     r = requests.get(url, stream=True)
     total = r.headers["Content-Length"]
@@ -88,12 +45,12 @@ def DownloadFile(url: str, OnProgress: Callable[[int, int], None] = lambda t, p:
     return f
 
 
-async def GetFileHash(dir: str, block_size=65536):
+async def get_file_hash(dir: str, block_size=65536):
     loop = asyncio.get_event_loop()
     task_return = asyncio.Future()
     file_hash = hashlib.sha256()
 
-    def HashThread():
+    def hash_thread():
         with open(dir, 'rb') as f:
             fb = f.read(block_size)
             while len(fb) > 0:
@@ -102,14 +59,17 @@ async def GetFileHash(dir: str, block_size=65536):
                 fb = f.read(block_size)
             loop.call_soon_threadsafe(task_return.set_result, file_hash)
 
-    Thread(daemon=True, target=HashThread, group=None).start()
+    Thread(daemon=True, target=hash_thread, group=None).start()
 
     result = await task_return
 
     return result
 
 
-async def TryStartSkill(phrase) -> list:
-    assistant = GetSingleton(constants.SINGLETON_ASSISTANT_ID)
-    return await assistant.TryStartSkill(phrase)
+async def try_start_skill(phrase, response_handler=AssistantContext) -> list:
+    assistant = get_singleton(constants.SINGLETON_ASSISTANT_ID)
+    return await assistant.try_start_skill(phrase, response_handler)
 
+
+def run_in_thread(func, *args: list):
+    Thread(target=func, daemon=True, group=None, args=args).start()

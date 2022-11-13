@@ -9,13 +9,13 @@ import requests
 from core.logger import log
 from core.numwrd import num2wrd, wrd2num
 from core.decorators import Skill, AssistantLoader, ServerHandler
-from core.singletons import GetSingleton
+from core.singletons import get_singleton
 from core.constants import DIRECTORY_DATA, SINGLETON_SERVER_ID
 from urllib.parse import urlencode
 from os import path, mkdir
 from plugins.base.constants import PLUGIN_ID
 from core.assistant import SkillEvent
-from plugins.base.text_to_speech import TextToSpeech
+from plugins.base.text_to_speech import text_to_speech
 from core.events import gEmitter
 
 SPOTIFY_PATH = path.join(DIRECTORY_DATA, PLUGIN_ID, 'spotify')
@@ -28,11 +28,11 @@ spotify_auth = None
 header_data = None
 spotify_auth_refresh = None
 config = None
-server = GetSingleton(SINGLETON_SERVER_ID)
+server = get_singleton(SINGLETON_SERVER_ID)
 
 
 @AssistantLoader
-async def SetSpotifyAuth():
+async def initialize_spotify():
     global spotify_auth
     global config
     if not path.exists(SPOTIFY_PATH):
@@ -58,7 +58,7 @@ async def SetSpotifyAuth():
             config = json.load(f)
 
 
-def UpdateHeader(auth):
+def update_header(auth):
     global header_data
     header_data = {
         "Authorization": "{} {}".format(auth['token_type'], auth['access_token']),
@@ -93,7 +93,7 @@ class SpotifyAuthHandler(tornado.web.RequestHandler):
                 gEmitter.emit('plugin_base_on_spotify_auth', auth_data)
 
 
-def GetSpotifyAuth():
+def get_spotify_auth():
     loop = asyncio.get_event_loop()
     global config
     task_return = asyncio.Future()
@@ -101,34 +101,34 @@ def GetSpotifyAuth():
         {'client_id': config['id'], 'scope': config['scope'],
          'redirect_uri': config['uri']})
 
-    def OnAuthRecieved(auth):
+    def on_auth_recieved(auth):
         loop.call_soon_threadsafe(task_return.set_result, auth)
 
-    gEmitter.once('plugin_base_on_spotify_auth', OnAuthRecieved)
+    gEmitter.once('plugin_base_on_spotify_auth', on_auth_recieved)
 
     webbrowser.open(authorize_url, new=2)
 
     return task_return
 
 
-async def ValidateSpotifyAuth():
+async def validate_spotify_auth():
     global spotify_auth
     global spotify_auth_refresh
     if not spotify_auth:
-        spotify_auth = await GetSpotifyAuth()
+        spotify_auth = await get_spotify_auth()
         spotify_auth_refresh = datetime.utcnow(
         ) + timedelta(seconds=spotify_auth['expires_in'])
         spotify_auth['expires_at'] = spotify_auth_refresh.isoformat()
         del spotify_auth['expires_in']
-        UpdateHeader(spotify_auth)
+        update_header(spotify_auth)
         with open(SPOTIFY_AUTH_PATH, "w") as outfile:
             json.dump(spotify_auth, outfile, indent=4)
 
     if not spotify_auth_refresh:
         spotify_auth_refresh = datetime.fromisoformat(
             spotify_auth['expires_at'])
-        UpdateHeader(spotify_auth)
-        return await ValidateSpotifyAuth()
+        update_header(spotify_auth)
+        return await validate_spotify_auth()
 
     utc_now = datetime.utcnow()
     if spotify_auth_refresh < utc_now:
@@ -149,16 +149,16 @@ async def ValidateSpotifyAuth():
             timedelta(seconds=auth_data['expires_in'])
         spotify_auth['access_token'] = auth_data['access_token']
         spotify_auth['expires_at'] = spotify_auth_refresh.isoformat()
-        UpdateHeader(spotify_auth)
+        update_header(spotify_auth)
         with open(SPOTIFY_AUTH_PATH, "w") as outfile:
             json.dump(spotify_auth, outfile, indent=4)
 
     return True
 
 
-def SpotifySkillValidation(f):
+def spotify_skill_validation(f):
     async def inner(*args, **kwargs):
-        if await ValidateSpotifyAuth():
+        if await validate_spotify_auth():
             await f(*args, **kwargs)
         return
 
@@ -166,29 +166,29 @@ def SpotifySkillValidation(f):
 
 
 @Skill(["skill_spotify_pause"])
-@SpotifySkillValidation
-async def Pause(e: SkillEvent, args):
+@spotify_skill_validation
+async def pause(e: SkillEvent, args: list):
     requests.put(url="https://api.spotify.com/v1/me/player/pause",
                  headers=header_data)
 
 
 @Skill(["skill_spotify_resume"])
-@SpotifySkillValidation
-async def Resume(e: SkillEvent, args):
+@spotify_skill_validation
+async def Resume(e: SkillEvent, args: list):
     requests.put(url="https://api.spotify.com/v1/me/player/play",
                  headers=header_data)
 
 
 @Skill(["skill_spotify_skip"])
-@SpotifySkillValidation
-async def Skip(e: SkillEvent, args):
+@spotify_skill_validation
+async def skip(e: SkillEvent, args: list):
     requests.post(url="https://api.spotify.com/v1/me/player/next",
                   headers=header_data)
 
 
 @Skill(["skill_spotify_play"], r"(?:play)(?:\s(album|track|playlist))?\s(.*)")
-@SpotifySkillValidation
-async def Play(e: SkillEvent, args):
+@spotify_skill_validation
+async def play(e: SkillEvent, args: list):
     type_to_play = "track"
     item_name = args[1]
 
@@ -213,13 +213,13 @@ async def Play(e: SkillEvent, args):
                 'offset': {'position': 0}
             })
 
-        log("Playing {}".format(
+        await e.context.handle_response("Playing {}".format(
             result[query]['items'][0]['name']))
 
 
 @Skill(["skill_spotify_add"], r"(?:add|queue)\s(.*)")
-@SpotifySkillValidation
-async def AddToQueue(e: SkillEvent, args):
+@spotify_skill_validation
+async def add_to_queue(e: SkillEvent, args: list):
     result = requests.get(url="https://api.spotify.com/v1/search", headers=header_data, params={
         "q": args[0],
         "type": ['track']
@@ -230,13 +230,13 @@ async def AddToQueue(e: SkillEvent, args):
             url="https://api.spotify.com/v1/me/player/queue?uri={}".format(
                 result['tracks']['items'][0]['uri']),
             headers=header_data)
-        log("Queued {}".format(
+        await e.context.handle_response("Queued {}".format(
             result['tracks']['items'][0]['name']))
 
 
 @Skill(["skill_spotify_volume"], r"(?:music volume|volume music)\s([a-z\s]+?)(?:\s(?:percent$)|$)")
-@SpotifySkillValidation
-async def ModifyVolume(e: SkillEvent, args):
+@spotify_skill_validation
+async def modify_volume(e: SkillEvent, args: list):
     volume = int(wrd2num(args[0]))
 
     if volume < 0 or volume > 100:
@@ -247,5 +247,5 @@ async def ModifyVolume(e: SkillEvent, args):
         url="https://api.spotify.com/v1/me/player/volume?volume_percent={}".format(
             volume),
         headers=header_data)
-    await e.Respond(
+    await e.context.handle_response(
         'Set music volume to {} Percent.'.format(num2wrd(volume)))

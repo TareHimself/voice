@@ -3,8 +3,8 @@ import datetime
 from core.numwrd import num2wrd
 
 
-def TimeToSttText(t: datetime):
-    [hour, minute] = t.strftime('%I|%M').split('|')
+def time_to_stt_text(t: datetime):
+    [hour, minute] = t.strftime('%I:%M').split('|')
 
     if hour.startswith('0'):
         if hour.startswith('00'):

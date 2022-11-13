@@ -145,4 +145,4 @@ def num2wrd(num: int):
 
         result = result + section_result
 
-    return result
+    return result.strip()

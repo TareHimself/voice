@@ -1,7 +1,7 @@
 import asyncio
 import datetime
 import time
-from core.notifications import SendNotification
+from core.notifications import send_notification
 from datetime import datetime
 from core.events import ThreadEmitter
 
@@ -19,7 +19,7 @@ class ScheduledEvent(ThreadEmitter):
         time.sleep((self.event['end_at'] -
                    datetime.now(self.tz)).total_seconds())
 
-        SendNotification("Reminder", self.event['msg'])
+        send_notification("Reminder", self.event['msg'])
 
     def run(self):
         asyncio.run(self.runAsync())

@@ -13,17 +13,17 @@ class ThreadEmitter(CoreThread):
         self.id = emitter_id if emitter_id else uuid.uuid1()
         thread_queue[self.id] = queue.Queue()
 
-    def AddJob(self, job: str, *args, **kwargs):
+    def add_job(self, job: str, *args, **kwargs):
         thread_queue[self.id].put({"j": job, "a": args, "k": kwargs})
 
-    def ProcessJobs(self):
+    def process_jobs(self):
         job = thread_queue[self.id].get()
         if job:
-            self.HandleJob(job['j'], *job['a'], **job['k'])
+            self.handle_job(job['j'], *job['a'], **job['k'])
 
-    def HandleJob(self, job: str, *args, **kwargs):
+    def handle_job(self, job: str, *args, **kwargs):
         pass
 
     def run(self):
         while True:
-            self.ProcessJobs()
+            self.process_jobs()

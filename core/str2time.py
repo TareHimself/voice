@@ -6,7 +6,7 @@ STRING_TO_TIME_EXPR_1 = r"(tomorrow|monday|tuesday|wednesday|thursday|friday|sat
 STRING_TO_TIME_EXPR_2 = r"(?:in (?:an? )?)?(?:([a-z]+|[a-z]+\s[a-z]+)?\s?(days?|hours?|minutes?|seconds?))?(?:(?:[\s,]+)?(?:and)?(?:[\s,]+)?)?(?:([a-z]+|[a-z]+\s[a-z]+)?\s?(days?|hours?|minutes?|seconds?))?(?:(?:[\s,]+)?(?:and)?(?:[\s,]+)?)?(?:([a-z]+|[a-z]+\s[a-z]+)?\s?(days?|hours?|minutes?|seconds?))?(?:(?:[\s,]+)?(?:and)?(?:[\s,]+)?)?(?:([a-z]+|[a-z]+\s[a-z]+)?\s?(days?|hours?|minutes?|seconds?))?"
 
 
-def stringToTime(text: str, tz: tzinfo = None):
+def string_to_time(text: str, tz: tzinfo = None):
     text = text.lower().strip()
     match_attempt = re.match(
         STRING_TO_TIME_EXPR_1,

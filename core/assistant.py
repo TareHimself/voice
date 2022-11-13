@@ -3,12 +3,12 @@ import importlib
 import core.decorators
 from core import constants
 import re
-from os import getcwd, listdir, path, mkdir
+from os import listdir, path, mkdir
 import sys
 from core.events import gEmitter
 from core.logger import log
-from core.loops import CreateAsyncLoop
-from core.singletons import Singleton, GetSingleton, SetSingleton
+from core.loops import create_async_loop
+from core.singletons import Singleton, get_singleton, set_singleton
 import asyncio
 import importlib.util
 import traceback
@@ -24,16 +24,66 @@ from core.constants import \
     WAKE_WORD
 from core.neural.train import train_intents
 from core.neural.inference import IntentInference
+from typing import Any, Callable, Coroutine, Union
+from core.threads.timer import start_timer, stop_timer
+
+
+class AssistantContext:
+    def __init__(self) -> None:
+        pass
+
+    async def get_followup(self, timeout_secs=0) -> Union[str, None]:
+        loop = asyncio.get_event_loop()
+        task_return = asyncio.Future()
+        task_id = uuid.uuid1()
+        status = 0
+
+        def on_results_recieved(msg):
+            nonlocal status
+            nonlocal task_return
+
+            if status == 0:
+                stop_timer(task_id)
+                gEmitter.off(constants.EVENT_ON_FOLLOWUP_MSG,
+                             on_results_recieved)
+                loop.call_soon_threadsafe(task_return.set_result, msg)
+                gEmitter.emit(constants.EVENT_ON_FOLLOWUP_END)
+                status = 1
+
+        def OnTimeout():
+            nonlocal status
+            nonlocal task_return
+            if status == 0:
+                gEmitter.off(constants.EVENT_ON_FOLLOWUP_MSG,
+                             on_results_recieved)
+                loop.call_soon_threadsafe(task_return.set_result, None)
+                gEmitter.emit(constants.EVENT_ON_FOLLOWUP_END)
+                status = 1
+
+        gEmitter.on(constants.EVENT_ON_FOLLOWUP_MSG, on_results_recieved)
+
+        gEmitter.emit(constants.EVENT_ON_FOLLOWUP_START)
+        if timeout_secs > 0:
+            start_timer(timer_id=task_id, length=timeout_secs,
+                        callback=OnTimeout)
+
+        result = await task_return
+
+        return result
+
+    async def handle_response(self, resp: str):
+        gEmitter.emit(constants.EVENT_ON_ASSISTANT_RESPONSE, resp)
+
+    async def handle_parse_error(phrase: str):
+        gEmitter.emit(constants.EVENT_ON_PHRASE_PARSE_ERROR)
 
 
 class SkillEvent:
-    def __init__(self, skill_id, assistant, phrase) -> None:
+    def __init__(self, skill_id, assistant: 'Assistant', phrase, context: AssistantContext) -> None:
         self.id = skill_id
         self.phrase = phrase
         self.assistant = assistant
-
-    async def Respond(self, msg: str):
-        await self.assistant.Respond(msg)
+        self.context = context
 
 
 class Assistant(Singleton):
@@ -46,20 +96,21 @@ class Assistant(Singleton):
         self.is_following_up = False
         self.plugins = {}
         self.tz = timezone('US/Eastern')
-        self.loop = CreateAsyncLoop()
-        self.loader = GetSingleton(SINGLETON_MAIN_LOADER_ID)
-        gEmitter.on(constants.EVENT_ON_FOLLOWUP_START, self.StartWaitFollowUp)
-        gEmitter.on(constants.EVENT_ON_FOLLOWUP_END, self.StopWaitFollowUp)
-        gEmitter.on(constants.EVENT_ON_SKILL_START, self.OnSkillStart)
-        gEmitter.on(constants.EVENT_ON_SKILL_END, self.OnSkillEnd)
-        gEmitter.on(constants.EVENT_SEND_PHRASE_TO_ASSISTANT, self.OnPhrase)
-        self.RunAsync(self.LoadPlugins())
+        self.loop = create_async_loop()
+        self.loader = get_singleton(SINGLETON_MAIN_LOADER_ID)
+        gEmitter.on(constants.EVENT_ON_FOLLOWUP_START,
+                    self.start_wait_follow_up)
+        gEmitter.on(constants.EVENT_ON_FOLLOWUP_END, self.stop_wait_follow_up)
+        gEmitter.on(constants.EVENT_ON_SKILL_START, self.on_skill_start)
+        gEmitter.on(constants.EVENT_ON_SKILL_END, self.on_skill_end)
+        gEmitter.on(constants.EVENT_SEND_PHRASE_TO_ASSISTANT, self.on_phrase)
+        self.run_async(self.load_plugins())
 
-    def RunAsync(self, awaitable):
+    def run_async(self, awaitable):
         return asyncio.run_coroutine_threadsafe(awaitable,
                                                 self.loop)
 
-    async def LoadPlugins(self):
+    async def load_plugins(self):
         log('Loading Plugins')
         plugin_intents = []
         for plugin_dir in listdir(DIRECTORY_PLUGINS):
@@ -85,7 +136,7 @@ class Assistant(Singleton):
 
                 self.plugins[plugin_id] = imported_plugin
 
-                plugin_intents.extend(imported_plugin.GetIntents())
+                plugin_intents.extend(imported_plugin.get_intents())
                 if not path.exists(path.join(DIRECTORY_DATA, plugin_id)):
                     mkdir(path.join(DIRECTORY_DATA, plugin_id))
 
@@ -98,28 +149,26 @@ class Assistant(Singleton):
         if not path.exists(DIRECTORY_DATA_CORE_INTENTS_INFERENCE):
             train_intents(plugin_intents,
                           DIRECTORY_DATA_CORE_INTENTS_INFERENCE)
-        SetSingleton(SINGLETON_INTENTS_INFERENCE_ID,
-                     IntentInference(DIRECTORY_DATA_CORE_INTENTS_INFERENCE))
+        set_singleton(SINGLETON_INTENTS_INFERENCE_ID,
+                      IntentInference(DIRECTORY_DATA_CORE_INTENTS_INFERENCE))
         log('Done Preparing Intents Inference\n')
-        await self.loader.LoadCurrent(self)
+        await self.loader.load_current(self)
 
-    def StartWaitFollowUp(self):
+    def start_wait_follow_up(self):
         self.is_following_up = True
 
-    def StopWaitFollowUp(self):
+    def stop_wait_follow_up(self):
         self.is_following_up = False
 
-    def OnSkillStart(self, _):
+    def on_skill_start(self, _):
         self.is_processing_command = True
 
-    def OnSkillEnd(self, _):
-        self.StopWaitFollowUp()
+    def on_skill_end(self, _):
+        self.stop_wait_follow_up()
         self.is_processing_command = False
 
-    async def Respond(self, msg: str):
-        gEmitter.emit(constants.EVENT_ON_ASSISTANT_RESPONSE, msg)
-
-    def OnPhrase(self, phrase: str, is_complete: bool, force_is_command=False):
+    async def on_phrase(self, phrase: str, is_complete: bool, force_is_command=False):
+        log(phrase)
         if self.is_following_up and is_complete:
             gEmitter.emit(constants.EVENT_ON_FOLLOWUP_MSG, phrase)
 
@@ -132,7 +181,7 @@ class Assistant(Singleton):
 
                 if is_possible_command:
                     # Try To start the associated skill
-                    self.RunAsync(self.TryStartSkill(phrase))
+                    self.run_async(self.try_start_skill(phrase))
                 else:
                     # Put the assistant into waiting mode
                     self.waiting_for_command = True
@@ -140,36 +189,43 @@ class Assistant(Singleton):
             elif is_complete and self.waiting_for_command:
                 if is_complete:
                     # Try To start the associated skill since we are already in waiting mode
-                    self.RunAsync(self.TryStartSkill(phrase))
+                    self.run_async(self.try_start_skill(phrase))
                     self.waiting_for_command = False
 
-    async def TryStartSkill(self, phrase) -> list:
+    async def try_start_skill(self, phrase, response_handler=AssistantContext) -> list:
         try:
-            parser = GetSingleton(SINGLETON_INTENTS_INFERENCE_ID)
 
-            conf, intent = parser.GetIntent(phrase)
+            parser: IntentInference = get_singleton(
+                SINGLETON_INTENTS_INFERENCE_ID)
 
-            log(phrase, conf, intent)
-            skill_manger = GetSingleton(SINGLETON_SKILL_MANAGER_ID)
+            conf, intent = parser.get_intent(phrase)
 
-            if conf >= 0.8 and skill_manger.HasIntent(intent):
-                skills = skill_manger.GetSkillsForIntent(intent)
+            skill_manger: core.decorators.SkillManager = get_singleton(
+                SINGLETON_SKILL_MANAGER_ID)
+
+            log(conf, intent)
+            if conf >= 0.8 and skill_manger.has_intent(intent):
+                handler = None
+                skills = skill_manger.get_skills_for_intent(intent)
                 ids = []
 
                 for func, reg in skills:
                     match = re.match(reg, phrase, re.IGNORECASE)
 
                     if match:
-                        log(func)
+                        if handler is None:
+                            handler = response_handler()
+
                         skill_id = f"skill-{str(uuid.uuid4())}"
 
-                        asyncio.create_task(func(SkillEvent(skill_id, self, phrase), match.groups()))
+                        asyncio.create_task(
+                            func(SkillEvent(skill_id, self, phrase, handler), match.groups()))
                         ids.append(skill_id)
 
-                log(f'Phrase {phrase} Matched {len(ids)} Skills:',ids)
+                log(f'Phrase {phrase} Matched {len(ids)} Skills:', ids)
                 return ids if len(ids) > 0 else None
-
-            gEmitter.emit(constants.EVENT_ON_PHRASE_PARSE_ERROR)
+            await response_handler.handle_parse_error(
+                "Sorry i didn't understand that.")
         except Exception as e:
             log(e)
             log(traceback.format_exc())

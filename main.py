@@ -13,12 +13,7 @@ import os
 
 d = os.path.join
 
-
-def n(*args, **kwargs):
-    return os.path.normpath(d(*args, *kwargs))
-
-
-os.path.join = d
+os.path.join = lambda *args, **kwargs: os.path.normpath(d(*args, *kwargs))
 
 assistant = Assistant()
 StartServer()

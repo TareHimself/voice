@@ -2,19 +2,19 @@
 all_singletons = {}
 
 
-def GetSingleton(id: str):
+def get_singleton(id: str):
     return all_singletons.get(id)
 
 
-def GetSingletons():
+def get_singletons():
     return all_singletons
 
 
-def SetSingleton(id: str, object):
+def set_singleton(id: str, object):
     all_singletons[id] = object
 
 
 class Singleton:
     def __init__(self, id) -> None:
         self.id = id
-        SetSingleton(id, self)
+        set_singleton(id, self)

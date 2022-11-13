@@ -4,15 +4,15 @@ from core.decorators import Skill
 
 
 @Skill(["skill_self_maximize"])
-async def MaximizeWindow(e: SkillEvent, args):
+async def maximize_window(e: SkillEvent, args: list):
     gEmitter.emit('window_action', "maximize")
 
 
 @Skill(["skill_self_minimize"])
-async def MinimizeWindow(e: SkillEvent, args):
+async def minimize_window(e: SkillEvent, args: list):
     gEmitter.emit('window_action', "minimize")
 
 
 @Skill(["skill_self_restore"])
-async def RestoreWindow(e: SkillEvent, args):
+async def restore_window(e: SkillEvent, args: list):
     gEmitter.emit('window_action', "restore")

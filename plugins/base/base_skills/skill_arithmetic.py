@@ -1,7 +1,7 @@
 from core.decorators import Skill
 from core.numwrd import wrd2num
 from core.assistant import SkillEvent
-from plugins.base.text_to_speech import TextToSpeech
+from plugins.base.text_to_speech import text_to_speech
 
 tokens = {
     "plus": "+",
@@ -16,7 +16,7 @@ tokens = {
 token_keys = tokens.keys()
 
 
-def ParseStringToMath(expr):
+def parse_string_to_math(expr):
     latest_unconverted = ""
     result = ""
     try:
@@ -40,9 +40,9 @@ def ParseStringToMath(expr):
 
 
 @Skill(["skill_arithmetic"], r"(?:(?:math|calculate|arithmetic|what is)\s?)?(.*)")
-async def DoMath(e: SkillEvent, args):
-    result = ParseStringToMath(args[0])
+async def do_math(e: SkillEvent, args: list):
+    result = parse_string_to_math(args[0])
     if len(result):
-        await e.Respond("The answer is {}".format(str(eval(result))))
+        await e.context.handle_response("The answer is {}".format(str(eval(result))))
     else:
-        await e.Respond('Failed To Parse Mathematical Expression')
+        await e.context.handle_response('Failed To Parse Mathematical Expression')

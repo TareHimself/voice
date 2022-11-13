@@ -11,7 +11,7 @@ class IntentInference:
         self.model.load_state_dict(self.data['state'])
         self.model.eval()
 
-    def GetIntent(self, msg: str):
+    def get_intent(self, msg: str):
         sentence = tokenize(msg)
         x = bag_of_words(sentence, self.data['words'])
         x = torch.from_numpy(x.reshape(1, x.shape[0])).float()
