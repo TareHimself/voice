@@ -111,7 +111,6 @@ class Assistant(Singleton):
                                                 self.loop)
 
     async def load_plugins(self):
-        log('Loading Plugins')
         plugin_intents = []
         for plugin_dir in listdir(DIRECTORY_PLUGINS):
 
@@ -168,7 +167,6 @@ class Assistant(Singleton):
         self.is_processing_command = False
 
     async def on_phrase(self, phrase: str, is_complete: bool, force_is_command=False):
-        log(phrase)
         if self.is_following_up and is_complete:
             gEmitter.emit(constants.EVENT_ON_FOLLOWUP_MSG, phrase)
 
@@ -192,7 +190,7 @@ class Assistant(Singleton):
                     self.run_async(self.try_start_skill(phrase))
                     self.waiting_for_command = False
 
-    async def try_start_skill(self, phrase, response_handler=AssistantContext) -> list:
+    async def try_start_skill(self, phrase, context=AssistantContext) -> list:
         try:
 
             parser: IntentInference = get_singleton(
@@ -200,32 +198,33 @@ class Assistant(Singleton):
 
             conf, intent = parser.get_intent(phrase)
 
-            skill_manger: core.decorators.SkillManager = get_singleton(
+            skill_manager: core.decorators.SkillManager = get_singleton(
                 SINGLETON_SKILL_MANAGER_ID)
 
-            log(conf, intent)
-            if conf >= 0.8 and skill_manger.has_intent(intent):
-                handler = None
-                skills = skill_manger.get_skills_for_intent(intent)
-                ids = []
+            if skill_manager.can_start_skills_in_context(context):
+                log(conf, intent)
+                if conf >= 0.8 and skill_manager.has_intent(intent):
+                    handler = None
+                    skills = skill_manager.get_skills_for_intent(intent)
+                    ids = []
 
-                for func, reg in skills:
-                    match = re.match(reg, phrase, re.IGNORECASE)
+                    for func, reg in skills:
+                        match = re.match(reg, phrase, re.IGNORECASE)
 
-                    if match:
-                        if handler is None:
-                            handler = response_handler()
+                        if match:
+                            if handler is None:
+                                handler = context()
 
-                        skill_id = f"skill-{str(uuid.uuid4())}"
+                            skill_id = f"skill-{str(uuid.uuid4())}"
 
-                        asyncio.create_task(
-                            func(SkillEvent(skill_id, self, phrase, handler), match.groups()))
-                        ids.append(skill_id)
+                            asyncio.create_task(
+                                func(SkillEvent(skill_id, self, phrase, handler), match.groups()))
+                            ids.append(skill_id)
 
-                log(f'Phrase {phrase} Matched {len(ids)} Skills:', ids)
-                return ids if len(ids) > 0 else None
-            await response_handler.handle_parse_error(
-                "Sorry i didn't understand that.")
+                    log(f'Phrase {phrase} Matched {len(ids)} Skills:', ids)
+                    return ids if len(ids) > 0 else None
+                await context.handle_parse_error(
+                    "Sorry i didn't understand that.")
         except Exception as e:
             log(e)
             log(traceback.format_exc())

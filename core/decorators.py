@@ -60,20 +60,34 @@ class SkillManager(Singleton):
         super().__init__(id=SINGLETON_SKILL_MANAGER_ID)
         self.all_skills = {}
         self.active_skills = {}
+        self.active_contexts = {}
 
     def add_skill(self, intent, wrapped_skill, params_regex):
         if not self.has_intent(intent):
             self.all_skills[intent] = []
+
         self.all_skills[intent].append([wrapped_skill, params_regex])
 
     def add_active_skill(self, skill_event):
+        if skill_event.context.__class__ not in self.active_contexts.keys():
+            self.active_contexts[skill_event.context.__class__] = []
+
+        self.active_contexts[skill_event.context.__class__].append(
+            skill_event.id)
         self.active_skills[skill_event.id] = skill_event
         gEmitter.emit(EVENT_ON_SKILL_START, skill_event.id)
 
-    def end_active_skill(self, skill_id):
-        if self.has_active_skill(skill_id):
-            del self.active_skills[skill_id]
-            gEmitter.emit(EVENT_ON_SKILL_START, skill_id)
+    def end_active_skill(self, skill_event):
+        if self.has_active_skill(skill_event.id):
+            if skill_event.context.__class__ in self.active_contexts.keys():
+                self.active_contexts[skill_event.context.__class__].remove(
+                    skill_event.id)
+
+                if len(self.active_contexts[skill_event.context.__class__]) == 0:
+                    del self.active_contexts[skill_event.context.__class__]
+
+            del self.active_skills[skill_event.id]
+            gEmitter.emit(EVENT_ON_SKILL_END, skill_event.id)
 
     def get_skills_for_intent(self, intent):
         return self.all_skills.get(intent, [])
@@ -83,6 +97,9 @@ class SkillManager(Singleton):
 
     def has_active_skill(self, skill_id):
         return skill_id in self.active_skills.keys()
+
+    def can_start_skills_in_context(self, context):
+        return context not in self.active_contexts.keys()
 
 
 SKILL_MANAGER = SkillManager()
@@ -102,7 +119,7 @@ def Skill(intents=[], params_regex=r".*"):
                 log('Error while executing skill for intents |', intents)
                 log(traceback.format_exc())
 
-            SKILL_MANAGER.end_active_skill(event.id)
+            SKILL_MANAGER.end_active_skill(event)
 
         for intent in intents:
             SKILL_MANAGER.add_skill(intent, wrapper, params_regex)

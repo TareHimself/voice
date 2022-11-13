@@ -52,7 +52,7 @@ class TTSThread(ThreadEmitter):
             self.process_jobs()
 
 
-def text_to_speech_text(text: str):
+def text_to_speakeble(text: str):
     text = text.replace(':', ' ').replace(':', ' ')
     new_str = ""
     for token in text.split():

@@ -7,7 +7,7 @@ from datetime import datetime
 from .scheduled_event import ScheduledEvent
 from core.utils import parse_phrase
 from core.assistant import SkillEvent
-from core.str2time import string_to_time
+from core.strtime import string_to_time
 from core.db import db
 from core.decorators import AssistantLoader
 from core.logger import log
@@ -76,9 +76,11 @@ async def list_schedule(e: SkillEvent, args: list):
         log("ANSWER FROM FOLLOWUP", answer)
         if answer:
             nlu_response = await parse_phrase(answer)
-            log('NLU', nlu_response)
             if nlu_response:
                 confidence, intent = nlu_response
                 if intent == "skill_affirm":
                     for i in range(len(items)):
-                        await e.context.handle_response('{}. {}. At {}.'.format(num2wrd(i + 1), items[i][1], time_to_stt_text(datetime.fromisoformat(items[i][2]))))
+                        t = datetime.fromisoformat(items[i][2])
+                        await e.context.handle_response('{}. {}, at {}.'.format(i + 1, items[i][1], t.strftime(f'%I:%M {"AM" if t.hour < 12 else "PM"}')))
+                else:
+                    await e.context.handle_response('Ok.')

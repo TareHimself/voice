@@ -7,6 +7,7 @@ STRING_TO_TIME_EXPR_2 = r"(?:in (?:an? )?)?(?:([a-z]+|[a-z]+\s[a-z]+)?\s?(days?|
 
 
 def string_to_time(text: str, tz: tzinfo = None):
+
     text = text.lower().strip()
     match_attempt = re.match(
         STRING_TO_TIME_EXPR_1,
@@ -52,3 +53,7 @@ def string_to_time(text: str, tz: tzinfo = None):
             return current
         else:
             return None
+
+
+def time_to_human_str(t: datetime, tz: tzinfo = None):
+    pass
