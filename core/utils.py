@@ -66,9 +66,9 @@ async def get_file_hash(dir: str, block_size=65536):
     return result
 
 
-async def try_start_skill(phrase, response_handler=AssistantContext) -> list:
+async def try_start_skill(phrase, response_handler=AssistantContext, *args) -> list:
     assistant = get_singleton(constants.SINGLETON_ASSISTANT_ID)
-    return await assistant.try_start_skill(phrase, response_handler)
+    return await assistant.try_start_skill(phrase, response_handler,*args)
 
 
 def run_in_thread(func, *args: list):

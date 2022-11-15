@@ -1,8 +1,6 @@
 import torch
 from core.neural.model import IntentsNeuralNet
-from torchtext.data.utils import get_tokenizer
-from torchtext.vocab import build_vocab_from_iterator
-tokenizer = get_tokenizer('basic_english')
+from core.neural.utils import build_vocab, tokenize
 
 
 class IntentInference:
@@ -11,15 +9,13 @@ class IntentInference:
         self.model = IntentsNeuralNet(
             self.data['input'], self.data['e_dim'], self.data['hidden'], self.data['output'])
 
-        self.vocab = build_vocab_from_iterator([self.data['words']], min_freq=1,
-                                               specials=['<unk>'])
-        self.vocab.set_default_index(self.vocab["<unk>"])
+        self.vocab = build_vocab(self.data['words'])
         self.model.load_state_dict(self.data['state'])
         self.model.eval()
 
     def get_intent(self, msg: str):
-        global tokenizer
-        sentence = tokenizer(msg)
+        global tokenize
+        sentence = tokenize(msg)
         x = self.vocab(sentence)
         print(x)
         x = torch.IntTensor(x)

@@ -1,5 +1,3 @@
-from torchtext.data.utils import get_tokenizer
-from torchtext.vocab import build_vocab_from_iterator
 import numpy as np
 import torch
 import torch.nn as nn
@@ -8,13 +6,11 @@ from core.neural.model import IntentsNeuralNet
 from torch.utils.data import DataLoader
 from core.logger import log
 
-# from core.logger import log
-
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 def train_intents(intents: list, save_path, batch_size=8, learning_rate=0.001, epochs=1000):
-    dataset = IntentsDataset(intents, tokenizer=get_tokenizer('basic_english'))
+    dataset = IntentsDataset(intents)
 
     def collate_data(batch):
         nonlocal dataset

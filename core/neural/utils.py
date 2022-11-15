@@ -4,25 +4,19 @@ import numpy as np
 from nltk import word_tokenize
 import nltk
 from os import path
+from torchtext.data.utils import get_tokenizer
+from torchtext.vocab import build_vocab_from_iterator
 
 stemmer = PorterStemmer()
+_tokenizer = get_tokenizer('basic_english')
 
+def build_vocab(words: list):
+    vocab = build_vocab_from_iterator([words], min_freq=1,
+                                      specials=['<unk>'])
 
-def tokenize(sentence):
-    return word_tokenize(sentence)
+    vocab.set_default_index(vocab["<unk>"])
 
+    return vocab
 
-def stem(word):
-    return stemmer.stem(word.lower())
-
-
-def bag_of_words(tokenized, words):
-    tokenized = [stem(w) for w in tokenized]
-
-    bag = np.zeros(len(words), dtype=np.float)
-
-    for idx, wrd in enumerate(words):
-        if wrd in tokenized:
-            bag[idx] = float(1.0)
-
-    return bag
+def tokenize(text: str):
+    return _tokenizer(text)

@@ -7,3 +7,4 @@ from .skill_spotify import *
 from .skill_time import *
 from .skill_window import *
 from .skill_telegram import *
+from .skill_discord import *

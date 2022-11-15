@@ -85,7 +85,7 @@ class TelegramContext(AssistantContext):
     async def handle_response(self, resp: str):
         await send_data_to_telegram(resp)
 
-    async def handle_parse_error(phrase: str):
+    async def handle_parse_error(self, phrase: str):
         await send_data_to_telegram(phrase)
 
 
@@ -106,6 +106,3 @@ class TelegramWebhookHandler(tornado.web.RequestHandler):
                     follow_up_callback(actual_message)
                     return
                 skill_ids = await try_start_skill(actual_message, TelegramContext)
-                log('Start Skill Result :', skill_ids)
-                # gEmitter.emit(constants.EVENT_SEND_PHRASE_TO_ASSISTANT,
-                #               f"{constants.WAKE_WORD} {actual_message}", True)

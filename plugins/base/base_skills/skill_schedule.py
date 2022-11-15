@@ -79,8 +79,12 @@ async def list_schedule(e: SkillEvent, args: list):
             if nlu_response:
                 confidence, intent = nlu_response
                 if intent == "skill_affirm":
+                    total = ""
                     for i in range(len(items)):
                         t = datetime.fromisoformat(items[i][2])
-                        await e.context.handle_response('{}. {}, at {}.'.format(i + 1, items[i][1], t.strftime(f'%I:%M {"AM" if t.hour < 12 else "PM"}')))
+                        total += '{}. {}, at {}.\n'.format(i + 1, items[i][1], t.strftime(
+                            f'%I:%M {"AM" if t.hour < 12 else "PM"}'))
+
+                    await e.context.handle_response(total)
                 else:
                     await e.context.handle_response('Ok.')

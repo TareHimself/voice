@@ -74,7 +74,7 @@ class AssistantContext:
     async def handle_response(self, resp: str):
         gEmitter.emit(constants.EVENT_ON_ASSISTANT_RESPONSE, resp)
 
-    async def handle_parse_error(phrase: str):
+    async def handle_parse_error(self, phrase: str):
         gEmitter.emit(constants.EVENT_ON_PHRASE_PARSE_ERROR)
 
 
@@ -190,7 +190,7 @@ class Assistant(Singleton):
                     self.run_async(self.try_start_skill(phrase))
                     self.waiting_for_command = False
 
-    async def try_start_skill(self, phrase, context=AssistantContext) -> list:
+    async def try_start_skill(self, phrase, context=AssistantContext, *args) -> list:
         try:
 
             parser: IntentInference = get_singleton(
@@ -201,20 +201,18 @@ class Assistant(Singleton):
             skill_manager: core.decorators.SkillManager = get_singleton(
                 SINGLETON_SKILL_MANAGER_ID)
 
+            handler = context(*args)
+
             if skill_manager.can_start_skills_in_context(context):
                 log(conf, intent)
                 if conf >= 0.8 and skill_manager.has_intent(intent):
-                    handler = None
                     skills = skill_manager.get_skills_for_intent(intent)
                     ids = []
 
                     for func, reg in skills:
                         match = re.match(reg, phrase, re.IGNORECASE)
 
-                        if match:
-                            if handler is None:
-                                handler = context()
-
+                        if match:          
                             skill_id = f"skill-{str(uuid.uuid4())}"
 
                             asyncio.create_task(
@@ -223,7 +221,7 @@ class Assistant(Singleton):
 
                     log(f'Phrase {phrase} Matched {len(ids)} Skills:', ids)
                     return ids if len(ids) > 0 else None
-                await context.handle_parse_error(
+                await handler.handle_parse_error(
                     "Sorry i didn't understand that.")
         except Exception as e:
             log(e)
