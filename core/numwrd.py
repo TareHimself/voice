@@ -84,6 +84,10 @@ num_to_words_operators = {
 def wrd2num(word: str):
     temp = 0
     items = []
+
+    if word.isnumeric():
+        return int(word)
+
     for word in word.split():
         if word in words_to_num_operators.keys():
             if temp == 0 and len(items) > 0:
@@ -112,7 +116,7 @@ def num2wrd(num: int):
     num_as_wrd = str(num)
 
     for i in range(math.ceil(len(num_as_wrd) / 3)):
-        parts.insert(0, num_as_wrd[::-1][3*i:(3*i) + 3][::-1])
+        parts.insert(0, num_as_wrd[::-1][3 * i:(3 * i) + 3][::-1])
 
     for i in range(len(parts)):
         section = parts[i]
@@ -127,18 +131,18 @@ def num2wrd(num: int):
 
             if num_position == 2 and num_current != "0":
                 section_result = section_result + \
-                    num_to_words[num_current] + " hundred "
+                                 num_to_words[num_current] + " hundred "
             elif num_position == 1 and num_current != "0":
                 if num_current == "1" and section[x + 1] != "0":
                     section_result = section_result + \
-                        num_to_words[num_current + section[x + 1]] + " "
+                                     num_to_words[num_current + section[x + 1]] + " "
                     break
                 else:
                     section_result = section_result + \
-                        num_to_words[num_current + "0"] + " "
+                                     num_to_words[num_current + "0"] + " "
             elif num_position == 0 and num_current != "0":
                 section_result = section_result + \
-                    num_to_words[num_current] + " "
+                                 num_to_words[num_current] + " "
 
         if section_result:
             section_result = section_result + suffix + " "
@@ -146,3 +150,5 @@ def num2wrd(num: int):
         result = result + section_result
 
     return result.strip()
+
+
