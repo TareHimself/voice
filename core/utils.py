@@ -68,8 +68,12 @@ async def get_file_hash(dir: str, block_size=65536):
 
 async def try_start_skill(phrase, response_handler=AssistantContext, *args) -> list:
     assistant = get_singleton(constants.SINGLETON_ASSISTANT_ID)
-    return await assistant.try_start_skill(phrase, response_handler,*args)
+    return await assistant.try_start_skill(phrase, response_handler, *args)
 
 
 def run_in_thread(func, *args: list):
     Thread(target=func, daemon=True, group=None, args=args).start()
+
+
+def hash_string(string: str):
+    return hashlib.md5(string.encode()).hexdigest()

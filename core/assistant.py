@@ -10,7 +10,6 @@ from core.logger import log
 from core.loops import create_async_loop
 from core.singletons import Singleton, get_singleton, set_singleton
 import asyncio
-import importlib.util
 import traceback
 from pytz import timezone
 from core.constants import \
@@ -22,8 +21,7 @@ from core.constants import \
     SINGLETON_ASSISTANT_ID, \
     SINGLETON_SKILL_MANAGER_ID, \
     WAKE_WORD
-from core.neural.train import train_intents
-from core.neural.inference import IntentInference
+from core.neural.engines import IntentsEngine
 from typing import Any, Callable, Coroutine, Union
 from core.threads.timer import start_timer, stop_timer
 
@@ -79,11 +77,12 @@ class AssistantContext:
 
 
 class SkillEvent:
-    def __init__(self, skill_id, assistant: 'Assistant', phrase, context: AssistantContext) -> None:
+    def __init__(self, skill_id,intent:str, assistant: 'Assistant', phrase, context: AssistantContext) -> None:
         self.id = skill_id
         self.phrase = phrase
         self.assistant = assistant
         self.context = context
+        self.intent = intent
 
 
 class Assistant(Singleton):
@@ -145,11 +144,9 @@ class Assistant(Singleton):
                 log(traceback.format_exc())
         log('Done Loading Plugins\n')
         log('Preparing Intents Inference')
-        if not path.exists(DIRECTORY_DATA_CORE_INTENTS_INFERENCE):
-            train_intents(plugin_intents,
-                          DIRECTORY_DATA_CORE_INTENTS_INFERENCE)
+
         set_singleton(SINGLETON_INTENTS_INFERENCE_ID,
-                      IntentInference(DIRECTORY_DATA_CORE_INTENTS_INFERENCE))
+                      IntentsEngine(plugin_intents,DIRECTORY_DATA_CORE_INTENTS_INFERENCE))
         log('Done Preparing Intents Inference\n')
         await self.loader.load_current(self)
 
@@ -193,7 +190,7 @@ class Assistant(Singleton):
     async def try_start_skill(self, phrase, context=AssistantContext, *args) -> list:
         try:
 
-            parser: IntentInference = get_singleton(
+            parser: IntentsEngine = get_singleton(
                 SINGLETON_INTENTS_INFERENCE_ID)
 
             conf, intent = parser.get_intent(phrase)
@@ -204,7 +201,7 @@ class Assistant(Singleton):
             handler = context(*args)
 
             if skill_manager.can_start_skills_in_context(context):
-                log(conf, intent)
+                log("Attempting to start skills in context ",conf, intent,skill_manager.has_intent(intent))
                 if conf >= 0.8 and skill_manager.has_intent(intent):
                     skills = skill_manager.get_skills_for_intent(intent)
                     ids = []
@@ -216,7 +213,7 @@ class Assistant(Singleton):
                             skill_id = f"skill-{str(uuid.uuid4())}"
 
                             asyncio.create_task(
-                                func(SkillEvent(skill_id, self, phrase, handler), match.groups()))
+                                func(SkillEvent(skill_id, intent ,self, phrase, handler), match.groups()))
                             ids.append(skill_id)
 
                     log(f'Phrase {phrase} Matched {len(ids)} Skills:', ids)

@@ -7,7 +7,7 @@
         "play girls on boys",
         "play track lilly by alan walker",
         "play playlist familia",
-        "play albumn genius by sia",
+        "play album genius by sia",
         "play track genius",
         "play lean on me"
       ]
@@ -80,9 +80,17 @@
       "tag": "skill_arithmetic",
       "examples": [
         "what is nine minus six",
-        "math nine minus six",
-        "arithmetic nine minus six",
-        "calculate nine minus six"
+        "math nine minus 4000",
+        "arithmetic nine minus 6",
+        "calculate nine minus six",
+        "what is 7 times six",
+        "math 11 divided by seventeen",
+        "arithmetic thirty plus one",
+        "calculate 40 * 40",
+        "what is seventy one times sixty",
+        "math fifty / ninety",
+        "arithmetic thirty five + 70",
+        "calculate ten plus 59"
       ]
     },
     {
@@ -106,7 +114,8 @@
         "list my schedule",
         "read me my schedule",
         "what is on my schedule for today",
-        "what are my reminders"
+        "what are my reminders",
+        "reminders"
       ]
     },
     {

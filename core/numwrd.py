@@ -84,7 +84,7 @@ num_to_words_operators = {
 def wrd2num(word: str):
     temp = 0
     items = []
-
+    word = word.strip()
     if word.isnumeric():
         return int(word)
 

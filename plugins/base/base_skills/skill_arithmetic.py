@@ -14,6 +14,7 @@ tokens = {
 }
 
 token_keys = tokens.keys()
+token_values = tokens.values()
 
 
 def parse_string_to_math(expr):
@@ -22,14 +23,20 @@ def parse_string_to_math(expr):
     try:
         for word in expr.split():
 
-            if word.lower() in token_keys:
+            word = word.lower().strip()
+
+            if word.isnumeric():
+                result += word + " "
+                continue
+
+            if word in token_keys or word in token_values:
 
                 if len(latest_unconverted.strip()) > 0:
                     result += str(wrd2num(latest_unconverted))
                     latest_unconverted = ""
-                result += tokens[word]
+                result += tokens[word] if word in token_keys else word
             else:
-                latest_unconverted += word.strip() + " "
+                latest_unconverted += word + " "
 
         if len(latest_unconverted.strip()) > 0:
             result += str(wrd2num(latest_unconverted))

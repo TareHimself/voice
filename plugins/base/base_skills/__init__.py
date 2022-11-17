@@ -1,5 +1,5 @@
 from .skill_applications import *
-from .skill_applications import *
+from .skill_arithmetic import *
 from .skill_schedule import *
 from .skill_search import *
 from .skill_speech import *

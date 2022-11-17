@@ -1,5 +1,4 @@
 const { Client } = require('express-websocket-proxy')
-const express = require('express')
 const axios = require("axios")
 
 const proxyClient = new Client('wss://proxy.oyintare.dev/')

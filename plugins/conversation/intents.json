@@ -1,0 +1,38 @@
+{
+  "tags": [
+    {
+      "tag": "skill_hello",
+      "examples": [
+        "yo",
+        "what's up",
+        "wagwan",
+        "hello",
+        "hi"
+      ],
+      "responses": [
+        "i dey",
+        "chillin",
+        "hi",
+        "yo"
+      ]
+    },
+    {
+      "tag": "skill_insult",
+      "examples": [
+        "fuck you",
+        "dumb bitch",
+        "bitch",
+        "your father will die",
+        "wtf is wrong with you",
+        "stupid",
+        "cow"
+      ],
+      "responses": [
+        "fuck you too",
+        "lmao man dem tripping",
+        "like your father yeah?",
+        "waste of brain cells"
+      ]
+    }
+    ]
+}

@@ -1,10 +1,13 @@
 import torch
 from core.neural.model import IntentsNeuralNet
 from core.neural.utils import build_vocab, tokenize
+from core.neural.train import train_intents
 
 
-class IntentInference:
-    def __init__(self, model_path):
+class IntentsEngine:
+    def __init__(self, intents: list, model_path: str):
+        train_intents(intents, model_path)
+
         self.data = torch.load(model_path)
         self.model = IntentsNeuralNet(
             self.data['input'], self.data['e_dim'], self.data['hidden'], self.data['output'])
@@ -14,10 +17,8 @@ class IntentInference:
         self.model.eval()
 
     def get_intent(self, msg: str):
-        global tokenize
         sentence = tokenize(msg)
         x = self.vocab(sentence)
-        print(x)
         x = torch.IntTensor(x)
         output = self.model(x, torch.IntTensor([0]))
         _, predicated = torch.max(output, dim=1)

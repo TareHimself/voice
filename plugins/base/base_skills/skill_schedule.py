@@ -73,7 +73,6 @@ async def list_schedule(e: SkillEvent, args: list):
 
         answer = await e.context.get_followup(10)
 
-        log("ANSWER FROM FOLLOWUP", answer)
         if answer:
             nlu_response = await parse_phrase(answer)
             if nlu_response:

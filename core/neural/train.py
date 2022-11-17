@@ -5,11 +5,25 @@ from core.neural.datasets import IntentsDataset
 from core.neural.model import IntentsNeuralNet
 from torch.utils.data import DataLoader
 from core.logger import log
+from os import path
+from core.neural.utils import hash_intents
+from tqdm import tqdm
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
-def train_intents(intents: list, save_path, batch_size=8, learning_rate=0.001, epochs=1000):
+def train_intents(intents: list, save_path: str, batch_size=8, learning_rate=0.001, epochs=1000):
+    intents_hash = hash_intents(intents)
+    log(path.exists(save_path),save_path)
+    if path.exists(save_path):
+        old_data: dict = torch.load(save_path)
+        log(old_data.get('hash',""))
+        if old_data.get('hash', "") == intents_hash:
+            log("No need to train new model, loading existing")
+            return
+
+
+    log("Training new model")
     dataset = IntentsDataset(intents)
 
     def collate_data(batch):
@@ -31,7 +45,7 @@ def train_intents(intents: list, save_path, batch_size=8, learning_rate=0.001, e
         offset_lst = torch.tensor(offset_lst[:-1]).cumsum(dim=0).to(device)
         review_lst = torch.cat(review_lst).to(device)  # 2 tensors to 1
 
-        return (label_lst, review_lst, offset_lst)
+        return label_lst, review_lst, offset_lst
 
     train_loader = DataLoader(
         dataset=dataset, batch_size=batch_size, num_workers=0, shuffle=True, collate_fn=collate_data)
@@ -45,6 +59,8 @@ def train_intents(intents: list, save_path, batch_size=8, learning_rate=0.001, e
                              hidden_size, output_size).to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+
+    loading_bar = tqdm(total=epochs,desc=f'epoch {0}/{epochs} ::  Accuracy unknown :: loss unknown')
 
     for epoch in range(epochs):
         total_accu, total_count = 0, 0
@@ -63,11 +79,8 @@ def train_intents(intents: list, save_path, batch_size=8, learning_rate=0.001, e
             total_count += label.size(0)
 
         accu_val = total_accu / total_count
-
-        if int(0.1 * epochs) == 0 or (epoch + 1) % int(0.1 * epochs) == 0:
-            log(f'epoch {epoch + 1}/{epochs} ::  Accuracy {(accu_val * 100):.4f} :: loss={loss.item():.4f}')
-
-    log(f'Final Stats ::  Accuracy {(accu_val * 100):.4f} :: loss={loss.item():.4f}')
+        loading_bar.update()
+        loading_bar.set_description_str(f'epoch {epoch + 1}/{epochs} ::  Accuracy {(accu_val * 100):.4f} :: loss {loss.item():.4f}')
 
     data_to_save = {
         "state": model.state_dict(),
@@ -76,7 +89,8 @@ def train_intents(intents: list, save_path, batch_size=8, learning_rate=0.001, e
         "hidden": hidden_size,
         "output": len(dataset.tags),
         "words": dataset.words,
-        "tags": dataset.tags
+        "tags": dataset.tags,
+        "hash": intents_hash
     }
 
     torch.save(data_to_save, save_path)
