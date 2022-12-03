@@ -100,4 +100,6 @@ async def initialize_tts():
     gEmitter.on(constants.EVENT_ON_PHRASE_PARSE_ERROR, OnParseError)
     gEmitter.on('base-do-speech', SendSpeech)
 
+    torch._C._jit_set_profiling_mode(False)
+
     await text_to_speech('Base Speech Active.')

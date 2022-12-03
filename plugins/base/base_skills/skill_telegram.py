@@ -101,8 +101,11 @@ class TelegramWebhookHandler(tornado.web.RequestHandler):
         if content is not None and content.get('message', None) is not None:
             message = content.get('message')
             if message.get('text', None) is not None:
-                actual_message = message.get('text', None)
+                actual_message:str = message.get('text', None)
                 if follow_up_callback:
                     follow_up_callback(actual_message)
                     return
-                skill_ids = await try_start_skill(actual_message, TelegramContext)
+                if actual_message.lower().startswith(constants.WAKE_WORD):
+                    actual_message = actual_message[len(constants.WAKE_WORD):len(actual_message)].strip()
+                if len(actual_message) > 0:
+                    skill_ids = await try_start_skill(actual_message, TelegramContext)
