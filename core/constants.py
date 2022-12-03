@@ -1,4 +1,5 @@
 from os import path, getcwd, mkdir
+import time
 
 EVENT_SEND_PHRASE_TO_ASSISTANT = "core-send-assistant-phrase"
 EVENT_ON_ASSISTANT_RESPONSE = "core-assistant-response"
@@ -14,8 +15,10 @@ DIRECTORY_PLUGINS = path.normpath(path.join(getcwd(), 'plugins'))
 DIRECTORY_DATA = path.normpath(path.join(getcwd(), 'data'))
 DIRECTORY_DATA_CORE = path.normpath(path.join(getcwd(), 'data', 'core'))
 DIRECTORY_DATA_CORE_INTENTS_INFERENCE = path.normpath(
-    path.join(getcwd(), 'data', 'core','intents.ptf'))
+    path.join(getcwd(), 'data', 'core', 'intents.pt'))
 
+DIRECTORY_LOGS = path.normpath(
+    path.join(getcwd(), 'logs', f'core-{time.strftime("%d-%m-%y_%H-%M-%S")}.log'))
 SINGLETON_SERVER_ID = "singleton-server"
 SINGLETON_ASSISTANT_ID = "singleton-assistant"
 SINGLETON_MAIN_LOADER_ID = "singleton-main-loader"

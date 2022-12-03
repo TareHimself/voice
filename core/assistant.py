@@ -77,7 +77,7 @@ class AssistantContext:
 
 
 class SkillEvent:
-    def __init__(self, skill_id,intent:str, assistant: 'Assistant', phrase, context: AssistantContext) -> None:
+    def __init__(self, skill_id, intent: str, assistant: 'Assistant', phrase, context: AssistantContext) -> None:
         self.id = skill_id
         self.phrase = phrase
         self.assistant = assistant
@@ -142,12 +142,12 @@ class Assistant(Singleton):
             except Exception as e:
                 log('Error while Importing', LOAD_FILE)
                 log(traceback.format_exc())
-        log('Done Loading Plugins\n')
+        log('Done Loading Plugins')
         log('Preparing Intents Inference')
 
         set_singleton(SINGLETON_INTENTS_INFERENCE_ID,
-                      IntentsEngine(plugin_intents,DIRECTORY_DATA_CORE_INTENTS_INFERENCE))
-        log('Done Preparing Intents Inference\n')
+                      IntentsEngine(plugin_intents, DIRECTORY_DATA_CORE_INTENTS_INFERENCE))
+        log('Done Preparing Intents Inference')
         await self.loader.load_current(self)
 
     def start_wait_follow_up(self):
@@ -201,7 +201,7 @@ class Assistant(Singleton):
             handler = context(*args)
 
             if skill_manager.can_start_skills_in_context(context):
-                log("Attempting to start skills in context ",conf, intent,skill_manager.has_intent(intent))
+                log(f"Attempting to start skill(s) in {context.__name__}")
                 if conf >= 0.8 and skill_manager.has_intent(intent):
                     skills = skill_manager.get_skills_for_intent(intent)
                     ids = []
@@ -209,14 +209,14 @@ class Assistant(Singleton):
                     for func, reg in skills:
                         match = re.match(reg, phrase, re.IGNORECASE)
 
-                        if match:          
+                        if match:
                             skill_id = f"skill-{str(uuid.uuid4())}"
 
                             asyncio.create_task(
-                                func(SkillEvent(skill_id, intent ,self, phrase, handler), match.groups()))
+                                func(SkillEvent(skill_id, intent, self, phrase, handler), match.groups()))
                             ids.append(skill_id)
 
-                    log(f'Phrase {phrase} Matched {len(ids)} Skills:', ids)
+                    log(f'Phrase {phrase} Matched {len(ids)} Skill(s):', ids)
                     return ids if len(ids) > 0 else None
                 await handler.handle_parse_error(
                     "Sorry i didn't understand that.")

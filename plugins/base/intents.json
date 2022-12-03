@@ -136,6 +136,7 @@
       "tag": "skill_self_say",
       "examples": [
         "say wakanda forever",
+        "[say | speak] [what time is it | what is the time | remind me to do something | italian baby]",
         "speak sea shells and shit",
         "say can i put this in your mouth",
         "speak when can i become human"

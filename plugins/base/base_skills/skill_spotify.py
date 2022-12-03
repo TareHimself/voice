@@ -203,19 +203,19 @@ async def play(e: SkillEvent, args: list):
     query = '{}s'.format(type_to_play)
     if result[query] and len(result[query]['items']) > 0:
         if type_to_play == 'track':
-            response: dict = json.loads(requests.put(url="https://api.spotify.com/v1/me/player/play", headers=header_data, json={
+            requests.put(url="https://api.spotify.com/v1/me/player/play", headers=header_data, json={
                 'uris': [result[query]['items'][0]['uri']]
-            }).content)
+            })
 
-            if response.get('error',{}).get('reason',"") == "NO_ACTIVE_DEVICE":
-                log(requests.get("https://api.spotify.com/v1/me/player/devices",headers=header_data).content)
+            # if response.get('error',{}).get('reason',"") == "NO_ACTIVE_DEVICE":
+            #     log(requests.get("https://api.spotify.com/v1/me/player/devices",headers=header_data).content)
 
         else:
 
-            log(requests.put(url="https://api.spotify.com/v1/me/player/play", headers=header_data, json={
+            requests.put(url="https://api.spotify.com/v1/me/player/play", headers=header_data, json={
                 'context_uri': result[query]['items'][0]['uri'],
                 'offset': {'position': 0}
-            }).content)
+            })
 
         await e.context.handle_response("Playing {}".format(
             result[query]['items'][0]['name']))

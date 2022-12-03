@@ -1,22 +1,28 @@
 from queue import Queue
 from threading import Thread
+import logging
+import time
+from .constants import DIRECTORY_LOGS
+import sys
 log_buffer = Queue()
 
+CORE_LOGGER = logging.getLogger('core')
+CORE_LOGGER.setLevel(logging.INFO)
 
-def _process_log_buffer():
-    while True:
-        d = log_buffer.get()
-        if d == None:
-            return
-        args, kwargs, should_print = d
-        if should_print:
-            print(*args, **kwargs)
+LOG_FILE = logging.FileHandler(DIRECTORY_LOGS)
+
+CONSOLE_STREAM = logging.StreamHandler(sys.stdout)
+
+LOGGING_FORMATTER = logging.Formatter(
+    '%(asctime)s | %(name)s | %(levelname)s | %(message)s')
+
+LOG_FILE.setFormatter(LOGGING_FORMATTER)
+CONSOLE_STREAM.setFormatter(LOGGING_FORMATTER)
+CORE_LOGGER.addHandler(LOG_FILE)
+CORE_LOGGER.addHandler(CONSOLE_STREAM)
 
 
-_logger_buffer_handler = Thread(
-    target=_process_log_buffer, group=None, daemon=True)
-_logger_buffer_handler.start()
-
-
-def log(*args, **kwargs):
-    log_buffer.put([args, kwargs, True])
+def log(*args, level=logging.INFO):
+    global CORE_LOGGER
+    msg = " ".join(list(map(str, args)))
+    CORE_LOGGER.log(level, msg)
