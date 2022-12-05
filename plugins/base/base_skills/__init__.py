@@ -6,5 +6,5 @@ from .skill_speech import *
 from .skill_spotify import *
 from .skill_time import *
 from .skill_window import *
-from .skill_telegram import *
-from .skill_discord import *
+from .skill_telegram_api import *
+from .skill_discord_api import *

@@ -40,7 +40,7 @@ async def initialize(va: Assistant):
     log('Done Generating Schedules Database')
 
 
-@Skill(["skill_schedule_add"], r"(?:remind (?:me (?:to )))?([a-zA-Z ]+?)(?:\sin(?: a| an)?|\sat)\s(.*)")
+@Skill(["skill_schedule_add"], r"(?:remind (?:me (?:to )))?(.+?)(?:\sin(?: a| an)?|\sat)\s(.*)")
 async def schedule_event(e: SkillEvent, args: list):
     tz = e.assistant.tz
     task, time = args
