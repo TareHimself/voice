@@ -1,13 +1,6 @@
-from queue import Queue
-from threading import Thread
 import logging
-import time
 from .constants import DIRECTORY_LOGS
 import sys
-log_buffer = Queue()
-
-CORE_LOGGER = logging.getLogger('core')
-CORE_LOGGER.setLevel(logging.INFO)
 
 LOG_FILE = logging.FileHandler(DIRECTORY_LOGS)
 
@@ -18,11 +11,26 @@ LOGGING_FORMATTER = logging.Formatter(
 
 LOG_FILE.setFormatter(LOGGING_FORMATTER)
 CONSOLE_STREAM.setFormatter(LOGGING_FORMATTER)
-CORE_LOGGER.addHandler(LOG_FILE)
-CORE_LOGGER.addHandler(CONSOLE_STREAM)
+
+LOGGERS = {}
 
 
-def log(*args, level=logging.INFO):
-    global CORE_LOGGER
+def get_logger(logger_id):
+    global LOGGERS
+    new_logger = LOGGERS.get(logger_id, None)
+    if new_logger is not None:
+        return new_logger
+
+    new_logger = logging.getLogger(logger_id)
+    new_logger.setLevel(logging.INFO)
+    new_logger.addHandler(LOG_FILE)
+    new_logger.addHandler(CONSOLE_STREAM)
+    LOGGERS[logger_id] = new_logger
+    return new_logger
+
+
+def log(*args, level=logging.INFO, logger_id="core"):
+    target_logger = get_logger(logger_id)
+
     msg = " ".join(list(map(str, args)))
-    CORE_LOGGER.log(level, msg)
+    target_logger.log(level, msg)

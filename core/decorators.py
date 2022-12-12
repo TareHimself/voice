@@ -1,3 +1,4 @@
+import re
 import traceback
 import uuid
 import inspect
@@ -62,11 +63,11 @@ class SkillManager(Singleton):
         self.active_skills = {}
         self.active_contexts = {}
 
-    def add_skill(self, intent, wrapped_skill, params_regex):
+    def add_skill(self, intent, wrapped_skill, params_regex,plugin_dir):
         if not self.has_intent(intent):
             self.all_skills[intent] = []
 
-        self.all_skills[intent].append([wrapped_skill, params_regex])
+        self.all_skills[intent].append([wrapped_skill, params_regex,plugin_dir])
 
     def add_active_skill(self, skill_event):
         if skill_event.context.__class__ not in self.active_contexts.keys():
@@ -108,7 +109,14 @@ SKILL_MANAGER = SkillManager()
 def Skill(intents=[], params_regex=r".*"):
     """Decorate A Skill Method."""
 
+    import inspect
+    import os
+
     def inner(func):
+
+        abs_path = os.path.abspath((inspect.stack()[1])[1])
+        plugin_base_dir = re.match(r"(.*plugins\/.*?)\/", abs_path).groups()[0]
+
         async def wrapper(event, args: list):
 
             SKILL_MANAGER.add_active_skill(event)
@@ -122,7 +130,7 @@ def Skill(intents=[], params_regex=r".*"):
             SKILL_MANAGER.end_active_skill(event)
 
         for intent in intents:
-            SKILL_MANAGER.add_skill(intent, wrapper, params_regex)
+            SKILL_MANAGER.add_skill(intent, wrapper, params_regex, plugin_base_dir)
 
         return wrapper
 

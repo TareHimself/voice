@@ -76,13 +76,32 @@ class AssistantContext:
         gEmitter.emit(constants.EVENT_ON_PHRASE_PARSE_ERROR)
 
 
+class AssistantPlugin:
+    def __init__(self, assistant: 'Assistant'):
+        self.assistant = assistant
+
+    def load(self):
+        pass
+
+    def get_intents(self):
+        return []
+
+    def get_info(self):
+        return {
+            "id": "uninitialized-plugin",
+            "author": "this was a mistake"
+        }
+
+
 class SkillEvent:
-    def __init__(self, skill_id, intent: str, assistant: 'Assistant', phrase, context: AssistantContext) -> None:
+    def __init__(self, skill_id, intent: str, plugin_base_path: str, assistant: 'Assistant', phrase,
+                 context: AssistantContext) -> None:
         self.id = skill_id
         self.phrase = phrase
         self.assistant = assistant
         self.context = context
         self.intent = intent
+        self.plugin: 'AssistantPlugin' = assistant.plugins[plugin_base_path]
 
 
 class Assistant(Singleton):
@@ -113,34 +132,40 @@ class Assistant(Singleton):
         plugin_intents = []
         for plugin_dir in listdir(DIRECTORY_PLUGINS):
 
-            LOAD_FILE = path.normpath(
+            load_file_path = path.normpath(
                 path.join(DIRECTORY_PLUGINS, plugin_dir, 'load.py'))
 
-            if not path.exists(LOAD_FILE):
+            plugin_folder_dir = path.normpath(
+                path.join(DIRECTORY_PLUGINS, plugin_dir))
+
+            if not path.exists(load_file_path):
                 continue
 
             try:
                 sys.path.insert(0, path.join(DIRECTORY_PLUGINS, plugin_dir))
 
                 spec = importlib.util.spec_from_file_location(
-                    '{}.load'.format(plugin_dir), LOAD_FILE)
+                    '{}.load'.format(plugin_dir), load_file_path)
                 imported_plugin = importlib.util.module_from_spec(spec)
-                # sys.modules[spec.name] = module
                 spec.loader.exec_module(imported_plugin)
-                # imported_plugin = importlib.import_module(
-                #     "plugins.{}.load".format(plugin_dir))
 
-                plugin_id = imported_plugin.GetId()
+                plugin: AssistantPlugin = imported_plugin.get_plugin()(Assistant)
+                plugin_info = plugin.get_info()
+                plugin_id = plugin_info['id']
 
-                self.plugins[plugin_id] = imported_plugin
+                self.plugins[plugin_id] = plugin
+                self.plugins[plugin_folder_dir] = plugin
 
-                plugin_intents.extend(imported_plugin.get_intents())
+                plugin_intents.extend(plugin.get_intents())
+
                 if not path.exists(path.join(DIRECTORY_DATA, plugin_id)):
                     mkdir(path.join(DIRECTORY_DATA, plugin_id))
 
-                log(f'Imported Plugin :: {plugin_id}')
+                plugin.load()
+                log(plugin_folder_dir)
+                log(f'Imported Plugin :: {plugin_info["id"]} by {plugin_info["author"]}')
             except Exception as e:
-                log('Error while Importing', LOAD_FILE)
+                log('Error while Importing', load_file_path)
                 log(traceback.format_exc())
         log('Done Loading Plugins')
         log('Preparing Intents Inference')
@@ -206,14 +231,15 @@ class Assistant(Singleton):
                     skills = skill_manager.get_skills_for_intent(intent)
                     ids = []
 
-                    for func, reg in skills:
+                    for func, reg, base_plugin_path in skills:
                         match = re.match(reg, phrase, re.IGNORECASE)
 
                         if match:
                             skill_id = f"skill-{str(uuid.uuid4())}"
 
                             asyncio.create_task(
-                                func(SkillEvent(skill_id, intent, self, phrase, handler), match.groups()))
+                                func(SkillEvent(skill_id, intent, base_plugin_path, self, phrase, handler),
+                                     match.groups()))
                             ids.append(skill_id)
 
                     log(f'Phrase {phrase} Matched {len(ids)} Skill(s):', ids)

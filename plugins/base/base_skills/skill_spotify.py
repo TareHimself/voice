@@ -32,7 +32,7 @@ server = get_singleton(SINGLETON_SERVER_ID)
 
 
 @AssistantLoader
-async def initialize_spotify():
+async def initialize_spotify(assistant,plugin):
     global spotify_auth
     global config
     if not path.exists(SPOTIFY_PATH):

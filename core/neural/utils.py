@@ -66,12 +66,11 @@ def compute_expanded_example(example: str):
 
 def expand_all_examples(intents: list):
     for intent in intents:
-        tag = intent['tag']
         new_examples = []
         for example in intent['examples']:
             new_examples.extend(compute_expanded_example(example))
         intent['examples'] = new_examples
-    return intent
+    return intents
 
 
 def hash_intents(intents: list):
@@ -79,7 +78,7 @@ def hash_intents(intents: list):
     for intent in intents:
         tag = intent['tag']
         for example in intent['examples']:
-            final_string += f'{tag.replace(" ", "")}{example.replace(" ", "")}'
+            final_string += f'{tag.replace(" ", "").lower()}{example.replace(" ", "").lower()}'
 
     return hashlib.md5(final_string.encode()).hexdigest()
 

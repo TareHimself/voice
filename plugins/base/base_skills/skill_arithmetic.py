@@ -49,6 +49,7 @@ def parse_string_to_math(expr):
 @Skill(["skill_arithmetic"], r"(?:(?:math|calculate|arithmetic|what is)\s?)?(.*)")
 async def do_math(e: SkillEvent, args: list):
     result = parse_string_to_math(args[0])
+    print(result)
     if len(result):
         await e.context.handle_response("The answer is {}".format(str(eval(result))))
     else:

@@ -67,7 +67,6 @@ async def list_schedule(e: SkillEvent, args: list):
     items = db.execute("SELECT * FROM skill_schedule").fetchall()
 
     await e.context.handle_response('You have {} items scheduled.'.format(num2wrd(len(items))))
-    await asyncio.sleep(1)
     if len(items) > 0:
         await e.context.handle_response('Would you like me to list them ?')
 
@@ -87,3 +86,4 @@ async def list_schedule(e: SkillEvent, args: list):
                     await e.context.handle_response(total)
                 else:
                     await e.context.handle_response('Ok.')
+
