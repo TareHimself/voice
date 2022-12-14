@@ -18,23 +18,28 @@ from core.assistant import SkillEvent
 from plugins.base.text_to_speech import text_to_speech
 from core.events import gEmitter
 
-SPOTIFY_PATH = path.join(DIRECTORY_DATA, PLUGIN_ID, 'spotify')
-
-SPOTIFY_AUTH_PATH = path.join(SPOTIFY_PATH, 'auth.json')
-
-SPOTIFY_CONFIG_PATH = path.join(SPOTIFY_PATH, 'config.json')
 
 spotify_auth = None
 header_data = None
 spotify_auth_refresh = None
 config = None
+SPOTIFY_AUTH_PATH = None
 server = get_singleton(SINGLETON_SERVER_ID)
 
 
 @AssistantLoader
-async def initialize_spotify(assistant,plugin):
+async def initialize_spotify(assistant, plugin):
     global spotify_auth
     global config
+    global SPOTIFY_AUTH_PATH
+
+    SPOTIFY_PATH = path.join(
+        DIRECTORY_DATA, plugin.get_info()['id'], 'spotify')
+
+    SPOTIFY_AUTH_PATH = path.join(SPOTIFY_PATH, 'auth.json')
+
+    SPOTIFY_CONFIG_PATH = path.join(SPOTIFY_PATH, 'config.json')
+
     if not path.exists(SPOTIFY_PATH):
         mkdir(SPOTIFY_PATH)
 

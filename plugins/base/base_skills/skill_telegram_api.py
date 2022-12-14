@@ -15,14 +15,17 @@ from core.logger import log
 from plugins.base.constants import PLUGIN_ID
 
 config = None
-TELEGRAM_PATH = path.join(constants.DIRECTORY_DATA, PLUGIN_ID, 'telegram')
-
-TELEGRAM_CONFIG_PATH = path.join(TELEGRAM_PATH, 'auth.json')
 
 
 @AssistantLoader
-async def create_telegram_auth():
+async def create_telegram_auth(a, plugin):
     global config
+
+    TELEGRAM_PATH = path.join(constants.DIRECTORY_DATA,
+                              plugin.get_info()['id'], 'telegram')
+
+    TELEGRAM_CONFIG_PATH = path.join(TELEGRAM_PATH, 'auth.json')
+
     if not path.exists(TELEGRAM_PATH):
         mkdir(TELEGRAM_PATH)
 

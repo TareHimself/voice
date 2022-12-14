@@ -21,7 +21,6 @@ async def parse_phrase(phrase):
 
 
 def display_ui_message(msg):
-    log(msg)
     gEmitter.emit('send_speech_text', msg, True)
 
 

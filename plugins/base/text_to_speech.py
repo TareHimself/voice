@@ -18,16 +18,17 @@ torch.set_num_threads(8)
 SAMPLE_RATE = 48000
 TTS_SPEAKER = 'en_10'
 TTS_URL = 'https://models.silero.ai/models/tts/en/v3_en.pt'
-TTS_DIR = path.join(DIRECTORY_DATA, PLUGIN_ID, 'tts.pt')
+
 CHANNELS = 1
 INPUT_DEVICE = None  # 4
 
 
 class TTSThread(ThreadEmitter):
 
-    def __init__(self):
+    def __init__(self, model_dir):
         super().__init__()
         self.model = None
+        self.model_dir = model_dir
 
     def do_tts(self, text, callback):
         if self.model:
@@ -46,7 +47,7 @@ class TTSThread(ThreadEmitter):
 
     def run(self):
         self.model = torch.package.PackageImporter(
-            TTS_DIR).load_pickle("tts_models", "model")
+            self.model_dir).load_pickle("tts_models", "model")
         self.model.to(device)
         while True:
             self.process_jobs()
@@ -54,6 +55,7 @@ class TTSThread(ThreadEmitter):
 
 def text_to_speakeble(text: str):
     text = text.replace(':', ' ').replace(':', ' ')
+    text = text.replace('AM', 'ai em').replace('PM', 'pee em')
     new_str = ""
     for token in text.split():
         if token.isnumeric():
@@ -83,22 +85,27 @@ async def text_to_speech(msg, waitForFinish=False):
 
 
 @AssistantLoader(loader_id='base-tts')
-async def initialize_tts():
-    if not os.path.isfile(TTS_DIR):
-        torch.hub.download_url_to_file(TTS_URL,
-                                       TTS_DIR)
+async def initialize_tts(va, plugin):
+    tts_dir = path.join(DIRECTORY_DATA, plugin.get_info()['id'], 'tts.pt')
 
-    tts = TTSThread()
+    if not os.path.isfile(tts_dir):
+        torch.hub.download_url_to_file(TTS_URL,
+                                       tts_dir)
+
+    tts = TTSThread(tts_dir)
     tts.start()
 
     def SendSpeech(msg, callback):
-        tts.add_job('tts', msg, callback)
+        tts.add_job('tts', text_to_speakeble(msg), callback)
+
+    def SendSpeechOnce(msg):
+        tts.add_job('tts', text_to_speakeble(msg), None)
 
     async def OnParseError():
         await text_to_speech('I cannot answer that yet.')
 
     gEmitter.on(constants.EVENT_ON_PHRASE_PARSE_ERROR, OnParseError)
-    gEmitter.on('base-do-speech', SendSpeech)
+    gEmitter.on(constants.EVENT_ON_ASSISTANT_RESPONSE, SendSpeechOnce)
 
     torch._C._jit_set_profiling_mode(False)
 

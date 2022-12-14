@@ -12,7 +12,7 @@ from tqdm import tqdm
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
-def train_intents(intents: list, save_path: str, batch_size=8, learning_rate=0.001, epochs=1000):
+def train_intents(intents: list, save_path: str, batch_size=8, learning_rate=0.001, epochs=200):
     expand_all_examples(intents)
     intents_hash = hash_intents(intents)
     if path.exists(save_path):

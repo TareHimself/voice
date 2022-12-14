@@ -162,8 +162,8 @@ class Assistant(Singleton):
                     mkdir(path.join(DIRECTORY_DATA, plugin_id))
 
                 plugin.load()
-                log(plugin_folder_dir)
-                log(f'Imported Plugin :: {plugin_info["id"]} by {plugin_info["author"]}')
+                log(
+                    f'Imported Plugin :: {plugin_info["id"]} by {plugin_info["author"]}')
             except Exception as e:
                 log('Error while Importing', load_file_path)
                 log(traceback.format_exc())

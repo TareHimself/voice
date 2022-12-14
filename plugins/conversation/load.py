@@ -12,10 +12,8 @@ INTENTS_PATH = path.normpath(path.join(LOADER_PATH, 'intents.json'))
 
 
 class ConversationalPlugin(core.assistant.AssistantPlugin):
-    def __init__(self, assistant: 'Assistant'):
+    def __init__(self, assistant: core.assistant.Assistant):
         super(ConversationalPlugin, self).__init__(assistant)
-        with open(path.normpath(path.join(LOADER_PATH, 'info.json')), 'r') as f:
-            self.info = json.load(f)
 
         with open(path.normpath(path.join(LOADER_PATH, 'intents.json')), 'r') as f:
             self.intents = json.load(f)['tags']
