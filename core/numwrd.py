@@ -83,6 +83,7 @@ num_to_words_operators = {
 
 def wrd2num(word: str):
     temp = 0
+    num_operations = 0
     items = []
     word = word.strip()
     if word.isnumeric():
@@ -96,8 +97,13 @@ def wrd2num(word: str):
                 temp = temp * words_to_num_operators[word]
                 items.insert(0, temp)
                 temp = 0
+            num_operations += 1
         elif word in words_to_num.keys():
             temp = temp + words_to_num[word]
+            num_operations += 1
+
+    if num_operations == 0:
+        return None
 
     if temp != 0:
         items.insert(0, temp)

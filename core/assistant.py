@@ -227,7 +227,8 @@ class Assistant(Singleton):
 
             if skill_manager.can_start_skills_in_context(context):
                 log(f"Attempting to start skill(s) in {context.__name__}")
-                if conf >= 0.8 and skill_manager.has_intent(intent):
+                if conf >= 0.98 and skill_manager.has_intent(intent):
+                    log(f'Phrase {phrase} Matched intent {intent} with confidence {conf}')
                     skills = skill_manager.get_skills_for_intent(intent)
                     ids = []
 
@@ -242,7 +243,7 @@ class Assistant(Singleton):
                                      match.groups()))
                             ids.append(skill_id)
 
-                    log(f'Phrase {phrase} Matched {len(ids)} Skill(s):', ids)
+
                     return ids if len(ids) > 0 else None
                 await handler.handle_parse_error(
                     "Sorry i didn't understand that.")

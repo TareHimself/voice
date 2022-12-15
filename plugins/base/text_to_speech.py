@@ -12,6 +12,7 @@ from core.logger import log
 from core.constants import DIRECTORY_DATA
 from core.numwrd import num2wrd
 from plugins.base.constants import PLUGIN_ID
+
 device = torch.device('cpu')
 torch.set_num_threads(8)
 
@@ -95,14 +96,14 @@ async def initialize_tts(va, plugin):
     tts = TTSThread(tts_dir)
     tts.start()
 
-    def SendSpeech(msg, callback):
-        tts.add_job('tts', text_to_speakeble(msg), callback)
-
     def SendSpeechOnce(msg):
+        log("Recieved tts request", msg)
         tts.add_job('tts', text_to_speakeble(msg), None)
 
     async def OnParseError():
         await text_to_speech('I cannot answer that yet.')
+
+    gEmitter.on('base-do-speech', lambda a, x: tts.add_job('tts', text_to_speakeble(a), x))
 
     gEmitter.on(constants.EVENT_ON_PHRASE_PARSE_ERROR, OnParseError)
     gEmitter.on(constants.EVENT_ON_ASSISTANT_RESPONSE, SendSpeechOnce)
