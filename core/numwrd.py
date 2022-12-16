@@ -85,6 +85,7 @@ def wrd2num(word: str):
     temp = 0
     num_operations = 0
     items = []
+    lastNum = math.inf
     word = word.strip()
     if word.isnumeric():
         return int(word)
@@ -97,10 +98,17 @@ def wrd2num(word: str):
                 temp = temp * words_to_num_operators[word]
                 items.insert(0, temp)
                 temp = 0
+                lastNum = math.inf
             num_operations += 1
         elif word in words_to_num.keys():
+            if lastNum < words_to_num[word]:
+                return None
+
             temp = temp + words_to_num[word]
+            lastNum = words_to_num[word]
             num_operations += 1
+        else:
+            return None
 
     if num_operations == 0:
         return None
@@ -137,18 +145,18 @@ def num2wrd(num: int):
 
             if num_position == 2 and num_current != "0":
                 section_result = section_result + \
-                                 num_to_words[num_current] + " hundred "
+                    num_to_words[num_current] + " hundred "
             elif num_position == 1 and num_current != "0":
                 if num_current == "1" and section[x + 1] != "0":
                     section_result = section_result + \
-                                     num_to_words[num_current + section[x + 1]] + " "
+                        num_to_words[num_current + section[x + 1]] + " "
                     break
                 else:
                     section_result = section_result + \
-                                     num_to_words[num_current + "0"] + " "
+                        num_to_words[num_current + "0"] + " "
             elif num_position == 0 and num_current != "0":
                 section_result = section_result + \
-                                 num_to_words[num_current] + " "
+                    num_to_words[num_current] + " "
 
         if section_result:
             section_result = section_result + suffix + " "
@@ -158,3 +166,31 @@ def num2wrd(num: int):
     return result.strip()
 
 
+def convertTextNumbersToDigits(expr: str):
+    all_tok = expr.split()
+    word_buff = []
+    result = ""
+
+    for tok in all_tok:
+        word_buff.append(f"{tok} ")
+        possible_num = wrd2num("".join(word_buff))
+
+        if possible_num is not None:
+            continue
+        else:
+            failed = word_buff.pop()
+            if len(word_buff) > 0:
+                result += f"{wrd2num(''.join(word_buff))} "
+                word_buff = []
+            possible_num_failed = wrd2num(failed)
+
+            if possible_num_failed is not None:
+                word_buff.append(f"{failed} ")
+            else:
+                result += failed
+
+    if len(word_buff) > 0:
+        result += f"{wrd2num(''.join(word_buff))} "
+        word_buff = []
+
+    return result

@@ -1,14 +1,17 @@
 import re
 from datetime import datetime, tzinfo, timedelta
-from core.numwrd import wrd2num
+from core.numwrd import wrd2num, convertTextNumbersToDigits
 
-STRING_TO_TIME_EXPR_1 = r"(tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)?\s?(?:at|by)\s?([a-z]+)\s?([a-z]{3,}\s[a-z]{3,}|[a-z]{3,})?\s?(pm|am)?"
-STRING_TO_TIME_EXPR_2 = r"(?:.*in (?:an? )?)?(?:([a-z]+|[a-z]+\s[a-z]+)?\s?(days?|hours?|minutes?|seconds?))?(?:(?:[\s,]+)?(?:and)?(?:[\s,]+)?)?(?:([a-z]+|[a-z]+\s[a-z]+)?\s?(days?|hours?|minutes?|seconds?))?(?:(?:[\s,]+)?(?:and)?(?:[\s,]+)?)?(?:([a-z]+|[a-z]+\s[a-z]+)?\s?(days?|hours?|minutes?|seconds?))?(?:(?:[\s,]+)?(?:and)?(?:[\s,]+)?)?(?:([a-z]+|[a-z]+\s[a-z]+)?\s?(days?|hours?|minutes?|seconds?))?"
-WEEKDAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+STRING_TO_TIME_EXPR_1 = re.compile(
+    r"(tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)?\s?(?:at|by)\s?([a-z]+)\s?([a-z]{3,}\s[a-z]{3,}|[a-z]{3,})?\s?(pm|am)?")
+STRING_TO_TIME_EXPR_2 = re.compile(
+    r"(?:.*in (?:an? )?)?(?:([0-9]{1,})?\s?(days?|hours?|minutes?|seconds?))?(?: and | )?(?:([0-9]{1,})?\s?(days?|hours?|minutes?|seconds?))?(?: and | )?(?:([0-9]{1,})?\s?(days?|hours?|minutes?|seconds?))?(?: and | )?(?:([0-9]{1,})?\s?(days?|hours?|minutes?|seconds?))?")
+WEEKDAYS = ['monday', 'tuesday', 'wednesday',
+            'thursday', 'friday', 'saturday', 'sunday']
 
 
 def string_to_time(text: str, tz: tzinfo = None):
-    text = text.lower().strip()
+    text = convertTextNumbersToDigits(text).lower().strip()
     match_attempt = re.match(
         STRING_TO_TIME_EXPR_1,
         text)
@@ -23,7 +26,8 @@ def string_to_time(text: str, tz: tzinfo = None):
         elif day.lower() in WEEKDAYS:
             target = WEEKDAYS.index(day.lower())
             current = start.today().weekday()
-            final = ((target + 7) - current) if target < current else (target - current)
+            final = ((target + 7) -
+                     current) if target < current else (target - current)
             start += timedelta(days=final)
 
         if hour is not None:
@@ -53,7 +57,7 @@ def string_to_time(text: str, tz: tzinfo = None):
                     unit = unit[:-1]
 
                 if value and unit:
-                    value = wrd2num(value)
+                    value = int(value)
                 elif unit:
                     value = 1
 
