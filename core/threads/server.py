@@ -1,5 +1,5 @@
 import asyncio
-from subprocess import Popen
+from subprocess import Popen, PIPE, STDOUT
 import sys
 from threading import Thread
 import tornado.web
@@ -7,8 +7,12 @@ from aiohttp import web
 from core.logger import log
 from core.singletons import get_singleton, Singleton
 from sys import platform
-from core.events import gEmitter
+from core.events import GLOBAL_EMITTER
 from core.constants import SINGLETON_SERVER_ID
+from threading import Timer
+
+a = Timer(0.1, lambda a: print(a))
+a.cancel()
 
 
 def CreateProxiedBody(body):
@@ -16,15 +20,19 @@ def CreateProxiedBody(body):
 
 
 def _start_proxy():
-    proxy_process = Popen(['npm', 'start'] if platform == 'win32' else ['npm start'], stdout=sys.stdout,
-                          stderr=sys.stderr, shell=True)
+    proxy_process = Popen(['npm', 'start'] if platform == 'win32' else ['npm start'], stdout=PIPE,
+                          stderr=STDOUT, shell=True)
 
     def end_process(sig, frame):
         proxy_process.terminate()
 
-    gEmitter.on('terminate', end_process)
+    GLOBAL_EMITTER.on('terminate', end_process)
 
-    proxy_process.communicate()
+    while proxy_process.poll() is None:
+        for line in iter(proxy_process.stdout.readline, b''):
+            cur_line = line.decode('utf-8').strip()
+            if len(cur_line) > 0:
+                log(cur_line, logger_id="proxy")
 
 
 def _RunProxy():

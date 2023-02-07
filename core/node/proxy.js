@@ -1,11 +1,12 @@
-const { Client } = require('express-websocket-proxy')
+const { Client, WebRequest } = require('express-websocket-proxy')
 const axios = require("axios")
 
-const proxyClient = new Client('wss://proxy.oyintare.dev/')
+const proxyClient = new Client("assistant", 'wss://proxy.oyintare.dev/', true)
 const HEADERS_TO_NOT_FORWARD = ['content-length']
 async function ProxyRequest(req) {
 
 	try {
+		console.log(req.originalUrl)
 		const actual_url = `http://localhost:24559${req.originalUrl.substring("/assistant".length)}`
 
 		const headers = Array.from(Object.entries(req.headers)).reduce((obj, [h, v]) => {
@@ -23,7 +24,9 @@ async function ProxyRequest(req) {
 			headers: headers,
 			validateStatus: () => true,
 		}).then((result) => {
-			req.send(result.data)
+			if (result.data.status) req.status(result.data.status)
+			req.send(result.data.body)
+			console.log("Sent", req.originalUrl, result.data)
 		}).catch((err) => {
 			console.log(err)
 			req.sendStatus(200)
@@ -37,9 +40,9 @@ async function ProxyRequest(req) {
 
 }
 
-proxyClient.on('-get|assistant\\/.*|assistant', ProxyRequest)
-proxyClient.on('-post|assistant\\/.*', ProxyRequest)
-proxyClient.on('-put|assistant\\/.*', ProxyRequest)
-proxyClient.on('-delete|assistant\\/.*', ProxyRequest)
+proxyClient.get('.*', ProxyRequest, true)
+proxyClient.post('.*', ProxyRequest, true)
+proxyClient.put('.*', ProxyRequest, true)
+proxyClient.delete('.*', ProxyRequest, true)
 
 proxyClient.connect()

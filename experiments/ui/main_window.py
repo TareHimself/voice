@@ -1,7 +1,7 @@
 from os import getcwd, path
 import wx
 from core.constants_1 import main_window_name, dynamic
-from core.events import gEmitter
+from core.events import GLOBAL_EMITTER
 from ui.visualizer import Visualizer
 from wx.html2 import WebView as WV
 
@@ -15,7 +15,7 @@ class MainWindow(wx.Frame):
         self.WebView = WV.New(self)
         self.WebView.LoadURL("https://umeko.dev/")
         self.SetBackgroundColour(dynamic.wx_color_darkgrey)
-        gEmitter.on('window_action', self.DoWindowAction)
+        GLOBAL_EMITTER.on('window_action', self.DoWindowAction)
         self.Show()
         self.SetIcon(wx.Icon(path.join(getcwd(), 'assets', 'icon.png')))
 

@@ -9,10 +9,10 @@ from os import path
 from core.neural.utils import hash_intents, expand_all_examples
 from tqdm import tqdm
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+PYTORCH_DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
-def train_intents(intents: list, save_path: str, batch_size=8, learning_rate=0.001, epochs=200):
+def train_intents(intents: list, save_path: str, batch_size=64, learning_rate=0.0001, epochs=200):
     expand_all_examples(intents)
     intents_hash = hash_intents(intents)
     if path.exists(save_path):
@@ -39,9 +39,11 @@ def train_intents(intents: list, save_path: str, batch_size=8, learning_rate=0.0
             review_lst.append(idxs)
             offset_lst.append(len(idxs))
 
-        label_lst = torch.tensor(label_lst, dtype=torch.int64).to(device)
-        offset_lst = torch.tensor(offset_lst[:-1]).cumsum(dim=0).to(device)
-        review_lst = torch.cat(review_lst).to(device)  # 2 tensors to 1
+        label_lst = torch.tensor(
+            label_lst, dtype=torch.int64).to(PYTORCH_DEVICE)
+        offset_lst = torch.tensor(
+            offset_lst[:-1]).cumsum(dim=0).to(PYTORCH_DEVICE)
+        review_lst = torch.cat(review_lst).to(PYTORCH_DEVICE)  # 2 tensors to 1
 
         return label_lst, review_lst, offset_lst
 
@@ -52,9 +54,9 @@ def train_intents(intents: list, save_path: str, batch_size=8, learning_rate=0.0
     embed_dim = 300
     hidden_size = 128
     output_size = len(dataset.tags)
-
+    log("device", PYTORCH_DEVICE)
     model = IntentsNeuralNet(input_size, embed_dim,
-                             hidden_size, output_size).to(device)
+                             hidden_size, output_size).to(PYTORCH_DEVICE)
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 

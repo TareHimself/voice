@@ -1,6 +1,6 @@
 import re
 from datetime import datetime, tzinfo, timedelta
-from core.numwrd import wrd2num, convertTextNumbersToDigits
+from core.numwrd import wrd2num, allTextToDigits
 
 STRING_TO_TIME_EXPR_1 = re.compile(
     r"(tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)?\s?(?:at|by)\s?([a-z]+)\s?([a-z]{3,}\s[a-z]{3,}|[a-z]{3,})?\s?(pm|am)?")
@@ -11,7 +11,7 @@ WEEKDAYS = ['monday', 'tuesday', 'wednesday',
 
 
 def string_to_time(text: str, tz: tzinfo = None):
-    text = convertTextNumbersToDigits(text).lower().strip()
+    text = allTextToDigits(text).lower().strip()
     match_attempt = re.match(
         STRING_TO_TIME_EXPR_1,
         text)

@@ -6,7 +6,7 @@ from core.assistant import AssistantContext
 import requests
 import tornado.web
 from tornado.escape import json_decode
-from core.events import gEmitter
+from core.events import GLOBAL_EMITTER
 from core import constants
 from core.decorators import AssistantLoader, ServerHandler
 from core.threads.timer import start_timer, stop_timer

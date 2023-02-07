@@ -6,7 +6,7 @@ from core.assistant import AssistantContext
 import requests
 import tornado.web
 from tornado.escape import json_decode
-from core.events import gEmitter
+from core.events import GLOBAL_EMITTER
 from core import constants
 from core.decorators import AssistantLoader, ServerHandler
 from core.threads.timer import start_timer, stop_timer
@@ -99,7 +99,8 @@ class TelegramWebhookHandler(tornado.web.RequestHandler):
         global follow_up_callback
         content = json_decode(self.request.body)
 
-        self.write(json.dumps({"body": "Ok"}))
+        log("recieved telegram update")
+        self.finish(json.dumps({"body": "Recieved"}))
 
         if content is not None and content.get('message', None) is not None:
             message = content.get('message')

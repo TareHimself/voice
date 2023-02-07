@@ -6,7 +6,7 @@ import signal
 import time
 
 from core.threads import StartServer
-from core.events import gEmitter
+from core.events import GLOBAL_EMITTER
 from core.assistant import Assistant
 import os
 
@@ -14,12 +14,11 @@ d = os.path.join
 os.path.join = lambda *args, **kwargs: os.path.normpath(d(*args, *kwargs))
 assistant = Assistant()
 StartServer()
-
 #import wx
 
 
 def on_process_end(sig, frame):
-    gEmitter.emit('terminate', sig, frame)
+    GLOBAL_EMITTER.emit('terminate', sig, frame)
     sys.exit(sig)
 
 

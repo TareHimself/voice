@@ -1,4 +1,5 @@
 import math
+from typing import Union
 
 words_to_num = {
     "zero": 0,
@@ -81,16 +82,21 @@ num_to_words_operators = {
 }
 
 
-def wrd2num(word: str):
+def wrd2num(words: str):
     temp = 0
     num_operations = 0
     items = []
     lastNum = math.inf
-    word = word.strip()
-    if word.isnumeric():
-        return int(word)
+    words = words.strip().lower().replace(',', "").split('point')
+    non_fractional = words[0]
+    fractional = (words[1] if len(words) > 1 else "").strip()
+    fractional = fractional if len(fractional) > 0 else None
+    if non_fractional.isdigit() and fractional is None:
+        return float(non_fractional)
+    elif fractional is not None and f"{non_fractional}.{fractional}".isdigit():
+        return float(f"{non_fractional}.{fractional}")
 
-    for word in word.split():
+    for word in non_fractional.split():
         if word in words_to_num_operators.keys():
             if temp == 0 and len(items) > 0:
                 items[0] = items[0] * words_to_num_operators[word]
@@ -109,7 +115,6 @@ def wrd2num(word: str):
             num_operations += 1
         else:
             return None
-
     if num_operations == 0:
         return None
 
@@ -117,20 +122,37 @@ def wrd2num(word: str):
         items.insert(0, temp)
         temp = 0
 
+    if fractional is not None:
+        total = ""
+        for num in fractional.split():
+            if num in words_to_num.keys() and words_to_num[num] < 10:
+                total += f"{words_to_num[num]}"
+            else:
+                return None
+
+        total = (1 / (10 ** len(total))) * float(total)
+        items.append(total)
+
     items.reverse()
 
     return sum(items)
 
 
-def num2wrd(num: int):
+def num2wrd(num: Union[float, int]):
     if num == 0:
         return "zero"
     result = ''
     parts = []
-    num_as_wrd = str(num)
+    num_as_wrd = str(num).split('.')
 
-    for i in range(math.ceil(len(num_as_wrd) / 3)):
-        parts.insert(0, num_as_wrd[::-1][3 * i:(3 * i) + 3][::-1])
+    non_fractional = num_as_wrd[0]
+
+    fractional = (num_as_wrd[1] if len(num_as_wrd) > 1 else "").strip()
+
+    fractional = fractional if len(fractional.rstrip("0")) > 0 else None
+
+    for i in range(math.ceil(len(non_fractional) / 3)):
+        parts.insert(0, non_fractional[::-1][3 * i:(3 * i) + 3][::-1])
 
     for i in range(len(parts)):
         section = parts[i]
@@ -163,10 +185,17 @@ def num2wrd(num: int):
 
         result = result + section_result
 
-    return result.strip()
+    result = result.strip()
+
+    if fractional is not None:
+        result += " point"
+        for tok in fractional:
+            result += f" {num_to_words[tok]}"
+
+    return result
 
 
-def convertTextNumbersToDigits(expr: str):
+def allTextToDigits(expr: str):
     all_tok = expr.split()
     word_buff = []
     result = ""
@@ -194,3 +223,23 @@ def convertTextNumbersToDigits(expr: str):
         word_buff = []
 
     return result
+
+
+def allDigitsToText(expr: str):
+    all_tok = expr
+    result = ""
+    buff = ""
+    for tok in all_tok:
+        if (tok + buff).replace('.', '').replace(',', "").isdigit():
+            buff += tok
+        else:
+            if len(buff) > 0:
+                result += f"{num2wrd(buff.replace(',', ''))}"
+                buff = ""
+            result += f"{tok}"
+
+    if len(buff) > 0:
+        result += f"{num2wrd(buff.replace(',', ''))}"
+        buff = ""
+
+    return result.strip()

@@ -1,7 +1,7 @@
 import asyncio
 from typing import Union
 from core.decorators import AssistantLoader
-from core.events import gEmitter
+from core.events import GLOBAL_EMITTER
 from core import constants
 import os
 from os import path
@@ -10,7 +10,7 @@ import sounddevice as sd
 from core.events import ThreadEmitter
 from core.logger import log
 from core.constants import DIRECTORY_DATA
-from core.numwrd import num2wrd
+from core.numwrd import num2wrd, allDigitsToText
 from plugins.base.constants import PLUGIN_ID
 
 device = torch.device('cpu')
@@ -55,21 +55,13 @@ class TTSThread(ThreadEmitter):
 
 
 def text_to_speakeble(text: str):
-    text = text.replace(':', ' ').replace(':', ' ')
-    text = text.replace('AM', 'ai em').replace('PM', 'pee em')
-    new_str = ""
-    for token in text.split():
-        if token.isnumeric():
-            new_str += f" {num2wrd(token)}"
-        else:
-            new_str += f" {token}"
-
-    return new_str.strip()
+    return allDigitsToText(text).replace(':', ' ').replace(':', ' ').replace(
+        'AM', 'ai em').replace('PM', 'pee em').strip()
 
 
 async def text_to_speech(msg, waitForFinish=False):
     if not waitForFinish:
-        gEmitter.emit('base-do-speech', msg, None)
+        GLOBAL_EMITTER.emit('base-do-speech', msg, None)
         return
 
     loop = asyncio.get_event_loop()
@@ -79,7 +71,7 @@ async def text_to_speech(msg, waitForFinish=False):
         nonlocal task_return
         loop.call_soon_threadsafe(task_return.set_result, None)
 
-    gEmitter.emit('base-do-speech', msg, OnFinish)
+    GLOBAL_EMITTER.emit('base-do-speech', msg, OnFinish)
 
     await task_return
     return
@@ -97,16 +89,18 @@ async def initialize_tts(va, plugin):
     tts.start()
 
     def SendSpeechOnce(msg):
-        log("Recieved tts request", msg)
-        tts.add_job('tts', text_to_speakeble(msg), None)
+        speakable = text_to_speakeble(msg)
+        log("Recieved tts request:", speakable)
+        tts.add_job('tts', speakable, None)
 
-    async def OnParseError():
-        await text_to_speech('I cannot answer that yet.')
+    async def OnParseError(err):
+        await text_to_speech(err)
 
-    gEmitter.on('base-do-speech', lambda a, x: tts.add_job('tts', text_to_speakeble(a), x))
+    GLOBAL_EMITTER.on('base-do-speech', lambda a,
+                      x: tts.add_job('tts', text_to_speakeble(a), x))
 
-    gEmitter.on(constants.EVENT_ON_PHRASE_PARSE_ERROR, OnParseError)
-    gEmitter.on(constants.EVENT_ON_ASSISTANT_RESPONSE, SendSpeechOnce)
+    GLOBAL_EMITTER.on(constants.EVENT_ON_PHRASE_PARSE_ERROR, OnParseError)
+    GLOBAL_EMITTER.on(constants.EVENT_ON_ASSISTANT_RESPONSE, SendSpeechOnce)
 
     torch._C._jit_set_profiling_mode(False)
 

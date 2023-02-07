@@ -6,7 +6,7 @@ import aiohttp
 import requests
 from threading import Thread
 from typing import Callable, Union
-from core.events import gEmitter
+from core.events import GLOBAL_EMITTER
 from core.logger import log
 from core.threads import start_timer, stop_timer
 from core import constants
@@ -21,15 +21,15 @@ async def parse_phrase(phrase):
 
 
 def display_ui_message(msg):
-    gEmitter.emit('send_speech_text', msg, True)
+    GLOBAL_EMITTER.emit('send_speech_text', msg, True)
 
 
 def end_skill():
-    gEmitter.emit(constants.EVENT_ON_SKILL_END)
+    GLOBAL_EMITTER.emit(constants.EVENT_ON_SKILL_END)
 
 
 def start_skill():
-    gEmitter.emit(constants.EVENT_ON_SKILL_START)
+    GLOBAL_EMITTER.emit(constants.EVENT_ON_SKILL_START)
 
 
 def download_file(url: str, OnProgress: Callable[[int, int], None] = lambda t, p: None):

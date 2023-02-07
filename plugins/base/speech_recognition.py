@@ -7,18 +7,18 @@ import requests
 from tqdm import tqdm
 from vosk import Model, KaldiRecognizer, SetLogLevel
 from os import getcwd, path
-from core.events import gEmitter, ThreadEmitter
+from core.events import GLOBAL_EMITTER, ThreadEmitter
 from core.logger import log
 from core.threads.voice import StartVoice
 from core.threads.collect_input import InputThread
 from zipfile import ZipFile
 from core.constants import DIRECTORY_DATA
-from core.events import gEmitter
+from core.events import GLOBAL_EMITTER
 from core.decorators import AssistantLoader
 from core import constants
 from plugins.base.constants import PLUGIN_ID
 
-VOSK_MODEL_URL = "https://alphacephei.com/vosk/models/vosk-model-en-us-daanzu-20200905.zip"
+VOSK_MODEL_URL = "https://alphacephei.com/vosk/models/vosk-model-en-us-0.42-gigaspeech.zip"
 
 
 def DownloadFile(url: str, OnProgress: Callable[[int, int], None] = lambda t, p: None):
@@ -75,7 +75,7 @@ class SpeechRecognitionThread(ThreadEmitter):
             self.callback(msg, True, True)
 
     def run(self):
-        gEmitter.on('user_input', self.OnInputFromUser)
+        GLOBAL_EMITTER.on('user_input', self.OnInputFromUser)
 
         if SHOULD_USE_INPUT:
             i = InputThread()
@@ -124,8 +124,9 @@ async def DownloadAndStartModel(va, plugin):
                   model_path)
 
     def OnCallback(phrase, is_complete):
-        gEmitter.emit(constants.EVENT_SEND_PHRASE_TO_ASSISTANT,
-                      phrase, is_complete)
-
+        log("STT PHRASE DEBUG:", phrase, is_complete) if is_complete else None
+        GLOBAL_EMITTER.emit(constants.EVENT_SEND_PHRASE_TO_ASSISTANT,
+                            phrase, is_complete)
+    ASR_DEVICE = None  # 1
     SpeechRecognitionThread(model_path,
-                            callback=OnCallback, onStart=lambda: log('Speech Recognition Active'), device=1).start()
+                            callback=OnCallback, onStart=lambda: log('Speech Recognition Active'), device=ASR_DEVICE).start()

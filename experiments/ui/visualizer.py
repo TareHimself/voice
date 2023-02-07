@@ -1,7 +1,7 @@
 import numpy as np
 import wx
 from core.constants_1 import dynamic
-from core.events import gEmitter
+from core.events import GLOBAL_EMITTER
 from core.threads import StartFFT
 
 SMOOTHING_RATE = 7
@@ -24,7 +24,7 @@ class Visualizer(wx.Panel):
         self.Bind(wx.EVT_TIMER, self.OnTimer, self.timer)
         self.timer.Start(15, wx.TIMER_CONTINUOUS)
         self.status_text = "Starting Up Speech Recognition.."
-        gEmitter.on('send_speech_text', self.UpdatePhrase)
+        GLOBAL_EMITTER.on('send_speech_text', self.UpdatePhrase)
 
     def OnTimer(self, event):
         for index in range(len(self.fft_data)):

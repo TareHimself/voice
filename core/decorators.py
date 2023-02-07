@@ -6,7 +6,7 @@ from core.constants import SINGLETON_SERVER_ID, SINGLETON_MAIN_LOADER_ID, SINGLE
     EVENT_ON_SKILL_START, EVENT_ON_SKILL_END
 from core.logger import log
 from core.singletons import get_singleton, Singleton, set_singleton
-from core.events import gEmitter
+from core.events import GLOBAL_EMITTER
 import inspect
 import os
 
@@ -93,7 +93,7 @@ class SkillManager(Singleton):
         self.active_contexts[skill_event.context.__class__].append(
             skill_event.id)
         self.active_skills[skill_event.id] = skill_event
-        gEmitter.emit(EVENT_ON_SKILL_START, skill_event.id)
+        GLOBAL_EMITTER.emit(EVENT_ON_SKILL_START, skill_event.id)
 
     def end_active_skill(self, skill_event):
         if self.has_active_skill(skill_event.id):
@@ -105,7 +105,7 @@ class SkillManager(Singleton):
                     del self.active_contexts[skill_event.context.__class__]
 
             del self.active_skills[skill_event.id]
-            gEmitter.emit(EVENT_ON_SKILL_END, skill_event.id)
+            GLOBAL_EMITTER.emit(EVENT_ON_SKILL_END, skill_event.id)
 
     def get_skills_for_intent(self, intent):
         return self.all_skills.get(intent, [])

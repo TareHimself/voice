@@ -25,5 +25,5 @@ class BasePlugin(core.assistant.AssistantPlugin):
         return self.info
 
 
-def get_plugin():
+def plugin():
     return BasePlugin

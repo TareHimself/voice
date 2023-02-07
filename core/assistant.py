@@ -1,11 +1,13 @@
 import uuid
 import importlib
+
+import requests
 import core.decorators
 from core import constants
 import re
 from os import listdir, path, mkdir
 import sys
-from core.events import gEmitter
+from core.events import GLOBAL_EMITTER
 from core.logger import log
 from core.loops import create_async_loop
 from core.singletons import Singleton, get_singleton, set_singleton
@@ -26,6 +28,13 @@ from typing import Any, Callable, Coroutine, Union
 from core.threads.timer import start_timer, stop_timer
 
 
+def module_from_file(module_name: str, file_path: str):
+    spec = importlib.util.spec_from_file_location(module_name, file_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 class AssistantContext:
     def __init__(self) -> None:
         pass
@@ -42,25 +51,25 @@ class AssistantContext:
 
             if status == 0:
                 stop_timer(task_id)
-                gEmitter.off(constants.EVENT_ON_FOLLOWUP_MSG,
-                             on_results_recieved)
+                GLOBAL_EMITTER.off(constants.EVENT_ON_FOLLOWUP_MSG,
+                                   on_results_recieved)
                 loop.call_soon_threadsafe(task_return.set_result, msg)
-                gEmitter.emit(constants.EVENT_ON_FOLLOWUP_END)
+                GLOBAL_EMITTER.emit(constants.EVENT_ON_FOLLOWUP_END)
                 status = 1
 
         def OnTimeout():
             nonlocal status
             nonlocal task_return
             if status == 0:
-                gEmitter.off(constants.EVENT_ON_FOLLOWUP_MSG,
-                             on_results_recieved)
+                GLOBAL_EMITTER.off(constants.EVENT_ON_FOLLOWUP_MSG,
+                                   on_results_recieved)
                 loop.call_soon_threadsafe(task_return.set_result, None)
-                gEmitter.emit(constants.EVENT_ON_FOLLOWUP_END)
+                GLOBAL_EMITTER.emit(constants.EVENT_ON_FOLLOWUP_END)
                 status = 1
 
-        gEmitter.on(constants.EVENT_ON_FOLLOWUP_MSG, on_results_recieved)
+        GLOBAL_EMITTER.on(constants.EVENT_ON_FOLLOWUP_MSG, on_results_recieved)
 
-        gEmitter.emit(constants.EVENT_ON_FOLLOWUP_START)
+        GLOBAL_EMITTER.emit(constants.EVENT_ON_FOLLOWUP_START)
         if timeout_secs > 0:
             start_timer(timer_id=task_id, length=timeout_secs,
                         callback=OnTimeout)
@@ -70,10 +79,10 @@ class AssistantContext:
         return result
 
     async def handle_response(self, resp: str):
-        gEmitter.emit(constants.EVENT_ON_ASSISTANT_RESPONSE, resp)
+        GLOBAL_EMITTER.emit(constants.EVENT_ON_ASSISTANT_RESPONSE, resp)
 
-    async def handle_parse_error(self, phrase: str):
-        gEmitter.emit(constants.EVENT_ON_PHRASE_PARSE_ERROR)
+    async def handle_parse_error(self, err: str):
+        GLOBAL_EMITTER.emit(constants.EVENT_ON_PHRASE_PARSE_ERROR, err)
 
 
 class AssistantPlugin:
@@ -116,12 +125,14 @@ class Assistant(Singleton):
         self.tz = timezone('US/Eastern')
         self.loop = create_async_loop()
         self.loader = get_singleton(SINGLETON_MAIN_LOADER_ID)
-        gEmitter.on(constants.EVENT_ON_FOLLOWUP_START,
-                    self.start_wait_follow_up)
-        gEmitter.on(constants.EVENT_ON_FOLLOWUP_END, self.stop_wait_follow_up)
-        gEmitter.on(constants.EVENT_ON_SKILL_START, self.on_skill_start)
-        gEmitter.on(constants.EVENT_ON_SKILL_END, self.on_skill_end)
-        gEmitter.on(constants.EVENT_SEND_PHRASE_TO_ASSISTANT, self.on_phrase)
+        GLOBAL_EMITTER.on(constants.EVENT_ON_FOLLOWUP_START,
+                          self.start_wait_follow_up)
+        GLOBAL_EMITTER.on(constants.EVENT_ON_FOLLOWUP_END,
+                          self.stop_wait_follow_up)
+        GLOBAL_EMITTER.on(constants.EVENT_ON_SKILL_START, self.on_skill_start)
+        GLOBAL_EMITTER.on(constants.EVENT_ON_SKILL_END, self.on_skill_end)
+        GLOBAL_EMITTER.on(
+            constants.EVENT_SEND_PHRASE_TO_ASSISTANT, self.on_phrase)
         self.run_async(self.load_plugins())
 
     def run_async(self, awaitable):
@@ -133,7 +144,7 @@ class Assistant(Singleton):
         for plugin_dir in listdir(DIRECTORY_PLUGINS):
 
             load_file_path = path.normpath(
-                path.join(DIRECTORY_PLUGINS, plugin_dir, 'load.py'))
+                path.join(DIRECTORY_PLUGINS, plugin_dir, 'index.py'))
 
             plugin_folder_dir = path.normpath(
                 path.join(DIRECTORY_PLUGINS, plugin_dir))
@@ -144,12 +155,10 @@ class Assistant(Singleton):
             try:
                 sys.path.insert(0, path.join(DIRECTORY_PLUGINS, plugin_dir))
 
-                spec = importlib.util.spec_from_file_location(
-                    '{}.load'.format(plugin_dir), load_file_path)
-                imported_plugin = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(imported_plugin)
+                imported_plugin = module_from_file(
+                    f"{plugin_dir}.index", load_file_path)
 
-                plugin: AssistantPlugin = imported_plugin.get_plugin()(Assistant)
+                plugin: AssistantPlugin = imported_plugin.plugin()(Assistant)
                 plugin_info = plugin.get_info()
                 plugin_id = plugin_info['id']
 
@@ -190,7 +199,7 @@ class Assistant(Singleton):
 
     async def on_phrase(self, phrase: str, is_complete: bool, force_is_command=False):
         if self.is_following_up and is_complete:
-            gEmitter.emit(constants.EVENT_ON_FOLLOWUP_MSG, phrase)
+            GLOBAL_EMITTER.emit(constants.EVENT_ON_FOLLOWUP_MSG, phrase)
 
         if not self.is_processing_command and not self.is_following_up:
             has_wake_word = phrase.lower().strip().startswith(
@@ -243,8 +252,23 @@ class Assistant(Singleton):
                                      match.groups()))
                             ids.append(skill_id)
 
-
                     return ids if len(ids) > 0 else None
+                # try:
+                #     log("Using the web so satify phrase:", phrase)
+                #     google_result = requests.get(
+                #         f"https://proxy.oyintare.dev/gsearch/search?s={phrase}").json()
+                #     if not google_result.get("error", True):
+                #         possible_answer: str = google_result.get('result', "")
+                #         if len(possible_answer.strip()) > 0:
+                #             log("Web responded with :", possible_answer)
+                #             await handler.handle_response(f"{possible_answer}.")
+
+                #             return
+
+                # except Exception as e:
+                #     log(e)
+                #     log(traceback.format_exc())
+
                 await handler.handle_parse_error(
                     "Sorry i didn't understand that.")
         except Exception as e:

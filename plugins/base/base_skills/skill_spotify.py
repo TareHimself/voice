@@ -16,7 +16,7 @@ from os import path, mkdir
 from plugins.base.constants import PLUGIN_ID
 from core.assistant import SkillEvent
 from plugins.base.text_to_speech import text_to_speech
-from core.events import gEmitter
+from core.events import GLOBAL_EMITTER
 
 
 spotify_auth = None
@@ -95,7 +95,7 @@ class SpotifyAuthHandler(tornado.web.RequestHandler):
         async with aiohttp.ClientSession() as session:
             async with session.post(url=url, headers=headers, data=payload) as resp:
                 auth_data = await resp.json()
-                gEmitter.emit('plugin_base_on_spotify_auth', auth_data)
+                GLOBAL_EMITTER.emit('plugin_base_on_spotify_auth', auth_data)
 
 
 def get_spotify_auth():
@@ -109,7 +109,7 @@ def get_spotify_auth():
     def on_auth_recieved(auth):
         loop.call_soon_threadsafe(task_return.set_result, auth)
 
-    gEmitter.once('plugin_base_on_spotify_auth', on_auth_recieved)
+    GLOBAL_EMITTER.once('plugin_base_on_spotify_auth', on_auth_recieved)
 
     webbrowser.open(authorize_url, new=2)
 
